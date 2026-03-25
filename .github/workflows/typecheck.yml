@@ -1,0 +1,38 @@
+name: Typecheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d534f2ed8388756ccf9f # v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @envlock/core (required for @envlock/next types)
+        run: pnpm --filter @envlock/core build
+
+      - name: Typecheck @envlock/core
+        run: pnpm --filter @envlock/core exec tsc --noEmit
+
+      - name: Typecheck @envlock/next
+        run: pnpm --filter @envlock/next exec tsc --noEmit
