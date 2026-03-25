@@ -41,7 +41,7 @@ export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
   throw new Error(
     "[envlock] Could not find configuration.\n" +
       "Add withEnvlock() to your next.config.js:\n\n" +
-      "  import { withEnvlock } from 'envlock';\n" +
+      "  import { withEnvlock } from 'envlock-next';\n" +
       "  export default withEnvlock({}, { onePasswordEnvId: 'your-env-id' });\n\n" +
       "Or set the ENVLOCK_OP_ENV_ID environment variable.",
   );

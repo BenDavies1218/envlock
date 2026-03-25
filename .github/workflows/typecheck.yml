@@ -34,5 +34,5 @@ jobs:
       - name: Typecheck envlock-core
         run: pnpm --filter envlock-core exec tsc --noEmit
 
-      - name: Typecheck envlock
-        run: pnpm --filter envlock exec tsc --noEmit
+      - name: Typecheck envlock-next
+        run: pnpm --filter envlock-next exec tsc --noEmit

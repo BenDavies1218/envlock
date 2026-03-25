@@ -1,5 +1,5 @@
 {
-  "name": "envlock",
+  "name": "envlock-next",
   "version": "0.1.0",
   "type": "module",
   "description": "Next.js plugin, createEnv wrapper, and CLI for envlock",

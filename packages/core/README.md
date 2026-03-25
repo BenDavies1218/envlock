@@ -2,7 +2,7 @@
 
 Framework-agnostic 1Password + dotenvx secret injection logic.
 
-> Most users should install [`envlock`](https://www.npmjs.com/package/envlock) instead. This package is for integrating envlock with frameworks other than Next.js.
+> Most users should install [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead. This package is for integrating envlock with frameworks other than Next.js.
 
 ## Install
 
