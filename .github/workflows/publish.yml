@@ -31,12 +31,12 @@ jobs:
       - name: Build
         run: pnpm -r build
 
-      - name: Publish @envlock/core
-        run: pnpm --filter @envlock/core publish --access public --no-git-checks
+      - name: Publish envlock-core
+        run: pnpm --filter envlock-core publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @envlock/next
-        run: pnpm --filter @envlock/next publish --access public --no-git-checks
+      - name: Publish envlock
+        run: pnpm --filter envlock publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

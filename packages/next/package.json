@@ -1,5 +1,5 @@
 {
-  "name": "@envlock/next",
+  "name": "envlock",
   "version": "0.1.0",
   "type": "module",
   "description": "Next.js plugin, createEnv wrapper, and CLI for envlock",
@@ -34,7 +34,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@envlock/core": "workspace:*",
+    "envlock-core": "workspace:*",
     "commander": "^12.0.0"
   },
   "peerDependencies": {
@@ -51,7 +51,7 @@
     }
   },
   "devDependencies": {
-    "@envlock/core": "workspace:*",
+    "envlock-core": "workspace:*",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@types/node": "^20.14.10",
     "next": "^15.2.3",

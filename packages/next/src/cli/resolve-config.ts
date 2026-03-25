@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { EnvlockOptions } from "@envlock/core";
-import { validateOnePasswordEnvId } from "@envlock/core";
+import type { EnvlockOptions } from "envlock-core";
+import { validateOnePasswordEnvId } from "envlock-core";
 
 const CONFIG_CANDIDATES = ["next.config.js", "next.config.mjs"];
 
@@ -41,7 +41,7 @@ export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
   throw new Error(
     "[envlock] Could not find configuration.\n" +
       "Add withEnvlock() to your next.config.js:\n\n" +
-      "  import { withEnvlock } from '@envlock/next';\n" +
+      "  import { withEnvlock } from 'envlock';\n" +
       "  export default withEnvlock({}, { onePasswordEnvId: 'your-env-id' });\n\n" +
       "Or set the ENVLOCK_OP_ENV_ID environment variable.",
   );

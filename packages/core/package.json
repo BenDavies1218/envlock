@@ -1,5 +1,5 @@
 {
-  "name": "@envlock/core",
+  "name": "envlock-core",
   "version": "0.1.0",
   "type": "module",
   "description": "Core 1Password + dotenvx secret injection logic for envlock",

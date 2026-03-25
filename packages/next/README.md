@@ -1,4 +1,4 @@
-# @envlock/next
+# envlock
 
 Inject secrets from 1Password into your Next.js app at dev/build/start time using [dotenvx](https://dotenvx.com) encrypted env files.
 
@@ -11,7 +11,7 @@ Inject secrets from 1Password into your Next.js app at dev/build/start time usin
 ## Install
 
 ```bash
-pnpm add @envlock/next
+pnpm add envlock
 ```
 
 ## Setup
@@ -19,7 +19,7 @@ pnpm add @envlock/next
 ### 1. Configure `next.config.js`
 
 ```js
-import { withEnvlock } from '@envlock/next';
+import { withEnvlock } from 'envlock';
 
 export default withEnvlock(
   {
@@ -102,7 +102,7 @@ envlock re-exports a `createEnv` wrapper around [`@t3-oss/env-nextjs`](https://e
 
 ```js
 // src/env.js
-import { createEnv } from '@envlock/next';
+import { createEnv } from 'envlock';
 import { z } from 'zod';
 
 export const env = createEnv({

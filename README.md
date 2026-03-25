@@ -8,10 +8,10 @@ No secrets ever touch your shell history, CI environment variables, or unencrypt
 
 | Package | Description |
 |---------|-------------|
-| [`@envlock/next`](./packages/next) | Next.js plugin, `createEnv` wrapper, and `envlock` CLI |
-| [`@envlock/core`](./packages/core) | Framework-agnostic 1Password + dotenvx invocation logic |
+| [`envlock`](./packages/next) | Next.js plugin, `createEnv` wrapper, and `envlock` CLI |
+| [`envlock-core`](./packages/core) | Framework-agnostic 1Password + dotenvx invocation logic |
 
-Most users only need `@envlock/next`.
+Most users only need `envlock`.
 
 ## How it works
 

@@ -28,11 +28,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build @envlock/core (required for @envlock/next types)
-        run: pnpm --filter @envlock/core build
+      - name: Build envlock-core (required for envlock types)
+        run: pnpm --filter envlock-core build
 
-      - name: Typecheck @envlock/core
-        run: pnpm --filter @envlock/core exec tsc --noEmit
+      - name: Typecheck envlock-core
+        run: pnpm --filter envlock-core exec tsc --noEmit
 
-      - name: Typecheck @envlock/next
-        run: pnpm --filter @envlock/next exec tsc --noEmit
+      - name: Typecheck envlock
+        run: pnpm --filter envlock exec tsc --noEmit

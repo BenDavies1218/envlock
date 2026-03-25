@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { runWithSecrets, validateEnvFilePath } from "@envlock/core";
+import { runWithSecrets, validateEnvFilePath } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
 
 type Environment = "development" | "staging" | "production";

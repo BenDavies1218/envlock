@@ -1,13 +1,13 @@
-# @envlock/core
+# envlock-core
 
 Framework-agnostic 1Password + dotenvx secret injection logic.
 
-> Most users should install [`@envlock/next`](https://www.npmjs.com/package/@envlock/next) instead. This package is for integrating envlock with frameworks other than Next.js.
+> Most users should install [`envlock`](https://www.npmjs.com/package/envlock) instead. This package is for integrating envlock with frameworks other than Next.js.
 
 ## Install
 
 ```bash
-pnpm add @envlock/core
+pnpm add envlock-core
 ```
 
 ## API
@@ -17,7 +17,7 @@ pnpm add @envlock/core
 Runs a command with secrets injected from 1Password via dotenvx. If `DOTENV_PRIVATE_KEY_<ENV>` is already set (e.g. in CI), it skips `op run` and calls `dotenvx run` directly.
 
 ```ts
-import { runWithSecrets } from '@envlock/core';
+import { runWithSecrets } from 'envlock-core';
 
 runWithSecrets({
   envFile: '.env.production',

@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
-import type { EnvlockOptions } from "@envlock/core";
-import { validateOnePasswordEnvId } from "@envlock/core";
+import type { EnvlockOptions } from "envlock-core";
+import { validateOnePasswordEnvId } from "envlock-core";
 
 export type EnvlockNextConfig = NextConfig & { __envlock: EnvlockOptions };
 
