@@ -3,6 +3,20 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Next.js plugin, createEnv wrapper, and CLI for envlock",
+  "license": "MIT",
+  "author": "Benjamin Davies",
+  "homepage": "https://github.com/BenDavies1218/envlock#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BenDavies1218/envlock.git",
+    "directory": "packages/next"
+  },
+  "bugs": {
+    "url": "https://github.com/BenDavies1218/envlock/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "bin": {
     "envlock": "./dist/cli/index.js"
   },
