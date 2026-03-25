@@ -1,0 +1,49 @@
+{
+  "name": "@envlock/next",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Next.js plugin, createEnv wrapper, and CLI for envlock",
+  "bin": {
+    "envlock": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@envlock/core": "workspace:*",
+    "commander": "^12.0.0"
+  },
+  "peerDependencies": {
+    "@t3-oss/env-nextjs": ">=0.12.0",
+    "next": ">=14.0.0",
+    "zod": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@t3-oss/env-nextjs": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@envlock/core": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.12.0",
+    "@types/node": "^20.14.10",
+    "next": "^15.2.3",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.0",
+    "zod": "^3.24.2"
+  }
+}
