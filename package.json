@@ -1,0 +1,11 @@
+{
+  "name": "envlock-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}
