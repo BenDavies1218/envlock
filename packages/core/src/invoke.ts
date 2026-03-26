@@ -1,9 +1,10 @@
 import { spawnSync } from "node:child_process";
 import { checkBinary } from "./detect.js";
+import type { Environment } from "./types.js";
 
 export interface RunWithSecretsOptions {
   envFile: string;
-  environment: string;
+  environment: Environment;
   onePasswordEnvId: string;
   command: string;
   args: string[];

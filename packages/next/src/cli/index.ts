@@ -1,8 +1,21 @@
 import { Command } from "commander";
-import { runWithSecrets, validateEnvFilePath } from "envlock-core";
+import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath } from "envlock-core";
+import type { Environment } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
 
-type Environment = "development" | "staging" | "production";
+const SUPPORTED_SUBCOMMANDS = {
+  dev: "development",
+  build: "production",
+  start: "production",
+} as const;
+
+type Subcommand = keyof typeof SUPPORTED_SUBCOMMANDS;
+
+const SUBCOMMAND_DESCRIPTIONS: Record<Subcommand, string> = {
+  dev: "Start Next.js development server",
+  build: "Build Next.js application",
+  start: "Start Next.js production server",
+};
 
 const DEFAULT_ENV_FILES: Record<Environment, string> = {
   development: ".env.development",
@@ -10,8 +23,13 @@ const DEFAULT_ENV_FILES: Record<Environment, string> = {
   production: ".env.production",
 };
 
+const ARGUMENT_FLAGS = {
+  staging: "--staging",
+  production: "--production",
+} as const;
+
 async function runNextCommand(
-  subcommand: string,
+  subcommand: Subcommand,
   environment: Environment,
   passthroughArgs: string[],
 ): Promise<void> {
@@ -32,18 +50,18 @@ async function runNextCommand(
 
 function addEnvFlags(cmd: Command): Command {
   return cmd
-    .option("--staging", "use staging environment")
-    .option("--production", "use production environment")
+    .option(ARGUMENT_FLAGS.staging, "use staging environment")
+    .option(ARGUMENT_FLAGS.production, "use production environment")
     .allowUnknownOption(true);
 }
 
-function getEnvironment(opts: {
-  staging?: boolean;
-  production?: boolean;
-}): Environment {
-  if (opts.production) return "production";
-  if (opts.staging) return "staging";
-  return "development";
+function getEnvironment(
+  opts: { staging?: boolean; production?: boolean },
+  defaultEnv: Environment,
+): Environment {
+  if (opts.production) return ENVIRONMENTS.production;
+  if (opts.staging) return ENVIRONMENTS.staging;
+  return defaultEnv;
 }
 
 const program = new Command("envlock");
@@ -53,38 +71,18 @@ program
   .description("Run Next.js commands with 1Password + dotenvx secret injection")
   .version("0.1.0");
 
-const devCmd = new Command("dev")
-  .description("Start Next.js development server")
-  .allowUnknownOption(true);
-addEnvFlags(devCmd).action(async (opts: { staging?: boolean; production?: boolean }) => {
-  const passthrough = devCmd.args.filter(
-    (a) => a !== "--staging" && a !== "--production",
+for (const [subcommand, defaultEnv] of Object.entries(
+  SUPPORTED_SUBCOMMANDS,
+) as [Subcommand, Environment][]) {
+  const cmd = new Command(subcommand)
+    .description(SUBCOMMAND_DESCRIPTIONS[subcommand])
+    .allowUnknownOption(true);
+  addEnvFlags(cmd).action(
+    async (opts: { staging?: boolean; production?: boolean }) => {
+      await runNextCommand(subcommand, getEnvironment(opts, defaultEnv), cmd.args);
+    },
   );
-  await runNextCommand("dev", getEnvironment(opts), passthrough);
-});
-
-const buildCmd = new Command("build")
-  .description("Build Next.js application")
-  .allowUnknownOption(true);
-addEnvFlags(buildCmd).action(async (opts: { staging?: boolean; production?: boolean }) => {
-  const passthrough = buildCmd.args.filter(
-    (a) => a !== "--staging" && a !== "--production",
-  );
-  await runNextCommand("build", getEnvironment(opts), passthrough);
-});
-
-const startCmd = new Command("start")
-  .description("Start Next.js production server")
-  .allowUnknownOption(true);
-addEnvFlags(startCmd).action(async (opts: { staging?: boolean; production?: boolean }) => {
-  const passthrough = startCmd.args.filter(
-    (a) => a !== "--staging" && a !== "--production",
-  );
-  await runNextCommand("start", getEnvironment(opts), passthrough);
-});
-
-program.addCommand(devCmd);
-program.addCommand(buildCmd);
-program.addCommand(startCmd);
+  program.addCommand(cmd);
+}
 
 program.parse(process.argv);
