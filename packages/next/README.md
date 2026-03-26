@@ -96,9 +96,13 @@ In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly. envlock detects this and skips `
     DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
 ```
 
-## `createEnv` wrapper
+## `createEnv`
 
-envlock re-exports a `createEnv` wrapper around [`@t3-oss/env-nextjs`](https://env.t3.gg) with sensible defaults:
+Validates your environment variables against Zod schemas and returns a fully-typed object. Throws at startup listing all invalid values.
+
+```bash
+pnpm add zod
+```
 
 ```js
 // src/env.js
@@ -113,21 +117,16 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
   },
-  runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
-    API_SECRET: process.env.API_SECRET,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  },
+  runtimeEnv: process.env,
 });
 ```
 
-Defaults applied: `emptyStringAsUndefined: true`, `skipValidation` reads from `SKIP_ENV_VALIDATION` env var.
-
-Requires `@t3-oss/env-nextjs` and `zod` as peer dependencies:
-
-```bash
-pnpm add @t3-oss/env-nextjs zod
-```
+- `server` — Zod schemas for server-only variables
+- `client` — Zod schemas for client-safe variables (keys must be prefixed with `NEXT_PUBLIC_`)
+- `runtimeEnv` — env source, defaults to `process.env`
+- Empty strings are treated as missing values
+- Set `SKIP_ENV_VALIDATION=1` to bypass validation (e.g. in CI lint steps)
+- Omit both `server` and `client` to skip validation entirely and return `{}`
 
 ## License
 
