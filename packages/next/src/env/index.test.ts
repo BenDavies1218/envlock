@@ -1,22 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { createEnv } from "./index.js";
 
-const { createEnv } = await import("./index.js");
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("createEnv", () => {
-  it("returns {} when called with no arguments", () => {
-    const env = createEnv();
+  it("returns {} when called with no schema", () => {
+    const env = createEnv({ runtimeEnv: {} });
     expect(env).toEqual({});
   });
 
   it("returns {} when SKIP_ENV_VALIDATION is set", () => {
-    process.env["SKIP_ENV_VALIDATION"] = "1";
+    vi.stubEnv("SKIP_ENV_VALIDATION", "1");
     const env = createEnv({
       server: { DB: z.string() },
       runtimeEnv: { DB: "postgres://localhost/db" },
     });
     expect(env).toEqual({});
-    delete process.env["SKIP_ENV_VALIDATION"];
   });
 
   it("coerces empty strings to undefined before validation", () => {
@@ -47,17 +49,13 @@ describe("createEnv", () => {
   });
 
   it("throws listing all invalid fields", () => {
-    let err: Error | undefined;
-    try {
+    const call = () =>
       createEnv({
         server: { DATABASE_URL: z.string().url(), SECRET: z.string().min(1) },
         runtimeEnv: { DATABASE_URL: "not-a-url", SECRET: "" },
       });
-    } catch (e) {
-      err = e as Error;
-    }
-    expect(err?.message).toMatch("DATABASE_URL");
-    expect(err?.message).toMatch("SECRET");
+    expect(call).toThrow("DATABASE_URL");
+    expect(call).toThrow("SECRET");
   });
 
   it("merges server and client into a single return object", () => {
