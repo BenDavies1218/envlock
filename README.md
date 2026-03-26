@@ -1,14 +1,17 @@
 # envlock
 
+[![CI](https://github.com/BenDavies1218/envlock/actions/workflows/ci.yml/badge.svg)](https://github.com/BenDavies1218/envlock/actions/workflows/ci.yml)
+[![Typecheck](https://github.com/BenDavies1218/envlock/actions/workflows/typecheck.yml/badge.svg)](https://github.com/BenDavies1218/envlock/actions/workflows/typecheck.yml)
+
 Inject secrets from 1Password into your Next.js app at dev/build/start time using [dotenvx](https://dotenvx.com) encrypted env files.
 
 No secrets ever touch your shell history, CI environment variables, or unencrypted `.env` files.
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| [`envlock-next`](./packages/next) | Next.js plugin, `createEnv` wrapper, and `envlock` CLI |
+| Package                           | Description                                             |
+| --------------------------------- | ------------------------------------------------------- |
+| [`envlock-next`](./packages/next) | Next.js plugin and `envlock` CLI                        |
 | [`envlock-core`](./packages/core) | Framework-agnostic 1Password + dotenvx invocation logic |
 
 Most users only need `envlock-next`.

@@ -30,13 +30,13 @@ runWithSecrets({
 
 **Options:**
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `envFile` | `string` | Path to the encrypted dotenvx env file |
-| `environment` | `string` | Environment name (`development`, `staging`, `production`) |
-| `onePasswordEnvId` | `string` | Your 1Password Environment ID |
-| `command` | `string` | The command to run |
-| `args` | `string[]` | Arguments to pass to the command |
+| Option             | Type          | Description                                               |
+| ------------------ | ------------- | --------------------------------------------------------- |
+| `envFile`          | `string`      | Path to the encrypted dotenvx env file                    |
+| `environment`      | `Environment` | Environment name (`development`, `staging`, `production`) |
+| `onePasswordEnvId` | `string`      | Your 1Password Environment ID                             |
+| `command`          | `string`      | The command to run                                        |
+| `args`             | `string[]`    | Arguments to pass to the command                          |
 
 ### `validateOnePasswordEnvId(id)`
 
@@ -57,20 +57,22 @@ Calls `process.exit(1)` with a helpful message if `name` is not in `PATH`.
 ## Types
 
 ```ts
-type Environment = 'development' | 'staging' | 'production';
+const ENVIRONMENTS = {
+  development: 'development',
+  staging: 'staging',
+  production: 'production',
+} as const;
+
+type Environment = keyof typeof ENVIRONMENTS;
 
 interface EnvlockOptions {
   onePasswordEnvId: string;
-  envFiles?: {
-    development?: string;
-    staging?: string;
-    production?: string;
-  };
+  envFiles?: Partial<Record<Environment, string>>;
 }
 
 interface RunWithSecretsOptions {
   envFile: string;
-  environment: string;
+  environment: Environment;
   onePasswordEnvId: string;
   command: string;
   args: string[];
