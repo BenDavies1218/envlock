@@ -12,11 +12,18 @@ describe("createEnv", () => {
     expect(env).toEqual({});
   });
 
-  it("returns {} when SKIP_ENV_VALIDATION is set", () => {
+  it("returns {} when SKIP_ENV_VALIDATION is set in runtimeEnv", () => {
+    const env = createEnv({
+      server: { DB: z.string() },
+      runtimeEnv: { DB: "postgres://localhost/db", SKIP_ENV_VALIDATION: "1" },
+    });
+    expect(env).toEqual({});
+  });
+
+  it("returns {} when SKIP_ENV_VALIDATION is set in process.env and no runtimeEnv is supplied", () => {
     vi.stubEnv("SKIP_ENV_VALIDATION", "1");
     const env = createEnv({
       server: { DB: z.string() },
-      runtimeEnv: { DB: "postgres://localhost/db" },
     });
     expect(env).toEqual({});
   });

@@ -2,19 +2,22 @@ import { z } from "zod";
 
 type EnvSchema = Record<string, z.ZodType>;
 
-interface CreateEnvArgs {
-  server?: EnvSchema;
-  client?: EnvSchema;
-  runtimeEnv?: Record<string, string | undefined>;
-}
+type InferSchema<T extends EnvSchema> = { [K in keyof T]: z.infer<T[K]> };
 
-export function createEnv(options?: CreateEnvArgs): Record<string, unknown> {
+export function createEnv<
+  S extends EnvSchema = Record<string, never>,
+  C extends EnvSchema = Record<string, never>,
+>(
+  options?: { server?: S; client?: C; runtimeEnv?: Record<string, string | undefined> },
+): InferSchema<S> & InferSchema<C> {
   if (!options || (!options.server && !options.client)) {
-    return {};
+    return {} as InferSchema<S> & InferSchema<C>;
   }
 
-  if (process.env["SKIP_ENV_VALIDATION"]) {
-    return {};
+  const source = options.runtimeEnv ?? process.env;
+
+  if (source["SKIP_ENV_VALIDATION"]) {
+    return {} as InferSchema<S> & InferSchema<C>;
   }
 
   // Enforce NEXT_PUBLIC_ prefix on all client keys
@@ -29,7 +32,6 @@ export function createEnv(options?: CreateEnvArgs): Record<string, unknown> {
     }
   }
 
-  const source = options.runtimeEnv ?? process.env;
   const allSchemas = { ...options.server, ...options.client };
 
   // coerce empty strings to undefined
@@ -45,7 +47,9 @@ export function createEnv(options?: CreateEnvArgs): Record<string, unknown> {
   for (const [key, schema] of Object.entries(allSchemas)) {
     const result = schema.safeParse(coerced[key]);
     if (!result.success) {
-      const messages = result.error.errors.map((e) => e.message).join(", ");
+      const messages = result.error.errors
+        .map((e) => (e.path.length > 0 ? `${e.path.join(".")}: ${e.message}` : e.message))
+        .join("; ");
       errors.push(`  ${key}: ${messages}`);
     } else {
       parsed[key] = result.data;
@@ -56,5 +60,5 @@ export function createEnv(options?: CreateEnvArgs): Record<string, unknown> {
     throw new Error(`Invalid environment variables:\n${errors.join("\n")}`);
   }
 
-  return parsed;
+  return parsed as InferSchema<S> & InferSchema<C>;
 }
