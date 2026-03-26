@@ -61,9 +61,18 @@ describe("createEnv", () => {
   it("merges server and client into a single return object", () => {
     const env = createEnv({
       server: { A: z.string() },
-      client: { B: z.string() },
-      runtimeEnv: { A: "hello", B: "world" },
+      client: { NEXT_PUBLIC_B: z.string() },
+      runtimeEnv: { A: "hello", NEXT_PUBLIC_B: "world" },
     });
-    expect(env).toEqual({ A: "hello", B: "world" });
+    expect(env).toEqual({ A: "hello", NEXT_PUBLIC_B: "world" });
+  });
+
+  it("throws when client keys are missing the NEXT_PUBLIC_ prefix", () => {
+    expect(() =>
+      createEnv({
+        client: { API_KEY: z.string(), NEXT_PUBLIC_OK: z.string() },
+        runtimeEnv: { API_KEY: "secret", NEXT_PUBLIC_OK: "fine" },
+      }),
+    ).toThrow("API_KEY");
   });
 });
