@@ -96,38 +96,6 @@ In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly. envlock detects this and skips `
     DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
 ```
 
-## `createEnv`
-
-Validates your environment variables against Zod schemas and returns a fully-typed object. Throws at startup listing all invalid values.
-
-```bash
-pnpm add zod
-```
-
-```js
-// src/env.js
-import { createEnv } from 'envlock-next';
-import { z } from 'zod';
-
-export const env = createEnv({
-  server: {
-    DATABASE_URL: z.string().url(),
-    API_SECRET: z.string().min(1),
-  },
-  client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
-  },
-  runtimeEnv: process.env,
-});
-```
-
-- `server` — Zod schemas for server-only variables
-- `client` — Zod schemas for client-safe variables (keys must be prefixed with `NEXT_PUBLIC_`)
-- `runtimeEnv` — env source, defaults to `process.env`
-- Empty strings are treated as missing values
-- Set `SKIP_ENV_VALIDATION=1` to bypass validation (e.g. in CI lint steps)
-- Omit both `server` and `client` to skip validation entirely and return `{}`
-
 ## License
 
 MIT — [Benjamin Davies](https://github.com/BenDavies1218)
