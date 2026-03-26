@@ -1,48 +1,71 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("@t3-oss/env-nextjs", () => ({
-  createEnv: vi.fn((opts: unknown) => opts),
-}));
+import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 const { createEnv } = await import("./index.js");
-const { createEnv: t3CreateEnv } = await import("@t3-oss/env-nextjs");
 
 describe("createEnv", () => {
-  it("applies emptyStringAsUndefined: true by default", () => {
-    createEnv({ server: {}, client: {}, runtimeEnv: {} });
-    expect(t3CreateEnv).toHaveBeenCalledWith(
-      expect.objectContaining({ emptyStringAsUndefined: true }),
-    );
+  it("returns {} when called with no arguments", () => {
+    const env = createEnv();
+    expect(env).toEqual({});
   });
 
-  it("reads skipValidation from SKIP_ENV_VALIDATION env var", () => {
+  it("returns {} when SKIP_ENV_VALIDATION is set", () => {
     process.env["SKIP_ENV_VALIDATION"] = "1";
-    createEnv({ server: {}, client: {}, runtimeEnv: {} });
-    expect(t3CreateEnv).toHaveBeenCalledWith(
-      expect.objectContaining({ skipValidation: true }),
-    );
+    const env = createEnv({
+      server: { DB: z.string() },
+      runtimeEnv: { DB: "postgres://localhost/db" },
+    });
+    expect(env).toEqual({});
     delete process.env["SKIP_ENV_VALIDATION"];
   });
 
-  it("does not skip validation when SKIP_ENV_VALIDATION is unset", () => {
-    delete process.env["SKIP_ENV_VALIDATION"];
-    createEnv({ server: {}, client: {}, runtimeEnv: {} });
-    expect(t3CreateEnv).toHaveBeenCalledWith(
-      expect.objectContaining({ skipValidation: false }),
-    );
+  it("coerces empty strings to undefined before validation", () => {
+    expect(() =>
+      createEnv({
+        server: { DB: z.string() },
+        runtimeEnv: { DB: "" },
+      }),
+    ).toThrow("DB");
   });
 
-  it("allows caller to override emptyStringAsUndefined", () => {
-    createEnv({ server: {}, client: {}, runtimeEnv: {}, emptyStringAsUndefined: false });
-    expect(t3CreateEnv).toHaveBeenCalledWith(
-      expect.objectContaining({ emptyStringAsUndefined: false }),
-    );
+  it("returns typed parsed object when all fields are valid", () => {
+    const env = createEnv({
+      server: { PORT: z.coerce.number() },
+      client: { NEXT_PUBLIC_URL: z.string().url() },
+      runtimeEnv: { PORT: "3000", NEXT_PUBLIC_URL: "https://example.com" },
+    });
+    expect(env).toEqual({ PORT: 3000, NEXT_PUBLIC_URL: "https://example.com" });
   });
 
-  it("allows caller to override skipValidation", () => {
-    createEnv({ server: {}, client: {}, runtimeEnv: {}, skipValidation: true });
-    expect(t3CreateEnv).toHaveBeenCalledWith(
-      expect.objectContaining({ skipValidation: true }),
-    );
+  it("throws listing a single invalid field", () => {
+    expect(() =>
+      createEnv({
+        server: { DATABASE_URL: z.string().url() },
+        runtimeEnv: { DATABASE_URL: "not-a-url" },
+      }),
+    ).toThrow("DATABASE_URL");
+  });
+
+  it("throws listing all invalid fields", () => {
+    let err: Error | undefined;
+    try {
+      createEnv({
+        server: { DATABASE_URL: z.string().url(), SECRET: z.string().min(1) },
+        runtimeEnv: { DATABASE_URL: "not-a-url", SECRET: "" },
+      });
+    } catch (e) {
+      err = e as Error;
+    }
+    expect(err?.message).toMatch("DATABASE_URL");
+    expect(err?.message).toMatch("SECRET");
+  });
+
+  it("merges server and client into a single return object", () => {
+    const env = createEnv({
+      server: { A: z.string() },
+      client: { B: z.string() },
+      runtimeEnv: { A: "hello", B: "world" },
+    });
+    expect(env).toEqual({ A: "hello", B: "world" });
   });
 });
