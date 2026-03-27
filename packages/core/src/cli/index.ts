@@ -16,6 +16,16 @@ const DEFAULT_ENV_FILES: Record<Environment, string> = {
   production: ".env.production",
 };
 
+function splitCommand(cmd: string): string[] {
+  const parts: string[] = [];
+  const re = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(cmd)) !== null) {
+    parts.push(match[1] ?? match[2] ?? match[0]!);
+  }
+  return parts;
+}
+
 export async function run(argv: string[], cwd: string = process.cwd()): Promise<void> {
   const environment: Environment = argv.includes(ARGUMENT_FLAGS.production)
     ? ENVIRONMENTS.production
@@ -44,7 +54,7 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
     if (!cmdString || cmdString.trim() === "") {
       throw new Error(`[envlock] Command "${firstArg}" is empty in envlock.config.js.`);
     }
-    const parts = cmdString.split(" ");
+    const parts = splitCommand(cmdString);
     command = parts[0]!;
     args = parts.slice(1);
   } else if (config?.commands && Object.keys(config.commands).length > 0 && passthrough.length === 1) {

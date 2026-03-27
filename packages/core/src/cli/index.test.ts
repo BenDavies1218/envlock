@@ -81,6 +81,18 @@ describe("run", () => {
     }));
   });
 
+  it("handles quoted arguments in named command", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "cfg-id", commands: { greet: 'node server.js --title "Hello World"' } };`,
+    );
+    await run(["greet"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "node",
+      args: ["server.js", "--title", "Hello World"],
+    }));
+  });
+
   it("throws when first arg matches no config command and no ad-hoc args follow", async () => {
     writeFileSync(
       join(tmpDir, "envlock.config.js"),
