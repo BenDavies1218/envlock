@@ -10,23 +10,54 @@ Framework-agnostic 1Password + dotenvx secret injection logic.
 pnpm add envlock-core
 ```
 
+## Usage
+
+### `envlock.config.js`
+
+Create `envlock.config.js` in your project root:
+
+```js
+// envlock.config.js
+export default {
+  onePasswordEnvId: 'ca6uypwvab5mevel44gqdc2zae',
+  envFiles: {
+    development: '.env.development',
+    staging: '.env.staging',
+    production: '.env.production',
+  },
+  commands: {
+    dev:   'node server.js --watch',
+    start: 'node server.js --port 3000',
+    build: 'node build.js',
+  },
+};
+```
+
+Then wire up your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev":   "envlock dev",
+    "build": "envlock build --production",
+    "start": "envlock start --production"
+  }
+}
+```
+
+Pass `--staging` or `--production` to switch environments. For ad-hoc commands, pass the command directly without a config key:
+
+```bash
+envlock node server.js --production
+```
+
+Set `ENVLOCK_OP_ENV_ID` to provide the 1Password Environment ID via env var instead of the config file. In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly and `op run` is skipped automatically.
+
 ## API
 
 ### `runWithSecrets(options)`
 
 Runs a command with secrets injected from 1Password via dotenvx. If `DOTENV_PRIVATE_KEY_<ENV>` is already set (e.g. in CI), it skips `op run` and calls `dotenvx run` directly.
-
-```ts
-import { runWithSecrets } from 'envlock-core';
-
-runWithSecrets({
-  envFile: '.env.production',
-  environment: 'production',
-  onePasswordEnvId: 'ca6uypwvab5mevel44gqdc2zae',
-  command: 'node',
-  args: ['server.js'],
-});
-```
 
 **Options:**
 
