@@ -12,6 +12,10 @@ export interface EnvlockOptions {
 }
 
 export interface EnvlockConfig {
+  /**
+   * Your 1Password Environment ID.
+   * Can alternatively be set via the ENVLOCK_OP_ENV_ID environment variable.
+   */
   onePasswordEnvId?: string;
   envFiles?: Partial<Record<Environment, string>>;
   commands?: Record<string, string>;
