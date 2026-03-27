@@ -4,6 +4,12 @@ Framework-agnostic 1Password + dotenvx secret injection logic.
 
 > Most users should install [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead. This package is for integrating envlock with frameworks other than Next.js.
 
+## Prerequisites
+
+- [1Password CLI](https://developer.1password.com/docs/cli/get-started/) (`op`) installed and signed in
+- [dotenvx](https://dotenvx.com/docs/install) installed (`npm install -g @dotenvx/dotenvx`)
+- Encrypted `.env.*` files committed to your repo (see [dotenvx quickstart](https://dotenvx.com/docs/quickstart))
+
 ## Install
 
 ```bash
@@ -95,6 +101,12 @@ const ENVIRONMENTS = {
 } as const;
 
 type Environment = keyof typeof ENVIRONMENTS;
+
+interface EnvlockConfig {
+  onePasswordEnvId?: string; // or set ENVLOCK_OP_ENV_ID env var
+  envFiles?: Partial<Record<Environment, string>>;
+  commands?: Record<string, string>;
+}
 
 interface EnvlockOptions {
   onePasswordEnvId: string;
