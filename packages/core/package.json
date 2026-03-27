@@ -17,6 +17,9 @@
   "engines": {
     "node": ">=18"
   },
+  "bin": {
+    "envlock": "./dist/cli/index.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
