@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import { ENVIRONMENTS } from "../types.js";
 import type { Environment } from "../types.js";
 import { runWithSecrets } from "../invoke.js";
@@ -32,24 +33,29 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   let command: string;
   let args: string[];
 
-  if (firstArg !== undefined && config?.commands && firstArg in config.commands) {
-    // Named command from config
-    const parts = (config.commands[firstArg] as string).split(" ");
-    command = parts[0] as string;
-    args = parts.slice(1);
-  } else if (firstArg !== undefined && (config === null || config.commands === undefined || !(firstArg in (config.commands ?? {})))) {
-    // Check if it looks like a known command name with no match
-    if (config?.commands && Object.keys(config.commands).length > 0 && passthrough.length === 1) {
-      throw new Error(
-        `[envlock] Unknown command "${firstArg}". Available: ${Object.keys(config.commands).join(", ")}`,
-      );
+  if (firstArg === undefined) {
+    const available = config?.commands ? Object.keys(config.commands).join(", ") : "none";
+    throw new Error(`[envlock] No command specified. Available commands: ${available}`);
+  }
+
+  if (config?.commands && firstArg in config.commands) {
+    // Named command from config — split into binary + args
+    const cmdString = config.commands[firstArg];
+    if (!cmdString || cmdString.trim() === "") {
+      throw new Error(`[envlock] Command "${firstArg}" is empty in envlock.config.js.`);
     }
+    const parts = cmdString.split(" ");
+    command = parts[0]!;
+    args = parts.slice(1);
+  } else if (config?.commands && Object.keys(config.commands).length > 0 && passthrough.length === 1) {
+    // Looks like a named command attempt but no match
+    throw new Error(
+      `[envlock] Unknown command "${firstArg}". Available: ${Object.keys(config.commands).join(", ")}`,
+    );
+  } else {
     // Ad-hoc command
     command = firstArg;
     args = passthrough.slice(1);
-  } else {
-    const available = config?.commands ? Object.keys(config.commands).join(", ") : "none";
-    throw new Error(`[envlock] No command specified. Available commands: ${available}`);
   }
 
   const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config?.onePasswordEnvId;
@@ -69,7 +75,7 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
 }
 
 // Binary entry point — only runs when executed directly
-if (process.argv[1]?.endsWith("cli/index.js")) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   run(process.argv.slice(2)).catch((err: unknown) => {
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
