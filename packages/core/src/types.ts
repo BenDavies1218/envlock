@@ -10,3 +10,9 @@ export interface EnvlockOptions {
   onePasswordEnvId: string;
   envFiles?: Partial<Record<Environment, string>>;
 }
+
+export interface EnvlockConfig {
+  onePasswordEnvId?: string;
+  envFiles?: Partial<Record<Environment, string>>;
+  commands?: Record<string, string>;
+}
