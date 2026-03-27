@@ -9,12 +9,10 @@ let tmpDir: string;
 beforeEach(() => {
   tmpDir = join(tmpdir(), `envlock-core-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(tmpDir, { recursive: true });
-  delete process.env["ENVLOCK_OP_ENV_ID"];
 });
 
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true });
-  delete process.env["ENVLOCK_OP_ENV_ID"];
 });
 
 describe("resolveConfig", () => {

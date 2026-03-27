@@ -6,7 +6,6 @@ import type { EnvlockConfig } from "../types.js";
 const CONFIG_CANDIDATES = [
   "envlock.config.js",
   "envlock.config.mjs",
-  "envlock.config.ts",
 ];
 
 export async function resolveConfig(cwd: string): Promise<EnvlockConfig | null> {
@@ -16,6 +15,7 @@ export async function resolveConfig(cwd: string): Promise<EnvlockConfig | null> 
 
     try {
       const mod = await import(pathToFileURL(fullPath).href);
+      // Handle both ESM default exports and CJS module.exports = {}
       const config = (mod as Record<string, unknown>).default ?? mod;
       if (config && typeof config === "object") {
         return config as EnvlockConfig;
