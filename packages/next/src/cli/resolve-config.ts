@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { EnvlockOptions } from "envlock-core";
-import { validateOnePasswordEnvId } from "envlock-core";
+import { validateOnePasswordEnvId, log } from "envlock-core";
 
 const CONFIG_CANDIDATES = ["next.config.js", "next.config.mjs"];
 
@@ -23,12 +23,12 @@ export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
         typeof config.__envlock === "object" &&
         "onePasswordEnvId" in config.__envlock
       ) {
+        log.debug(`Config loaded from ${candidate}`);
         return config.__envlock as EnvlockOptions;
       }
     } catch (err) {
-      console.warn(
-        `[envlock] Failed to load ${candidate}: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      log.warn(`Failed to load ${candidate}: ${err instanceof Error ? err.message : String(err)}`);
+      log.debug(`Stack: ${err instanceof Error ? (err.stack ?? "") : ""}`);
     }
   }
 

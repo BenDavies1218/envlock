@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { log } from "../logger.js";
 import { resolveConfig } from "./resolve-config.js";
 
 let tmpDir: string;
@@ -76,7 +77,7 @@ describe("resolveConfig", () => {
       join(tmpDir, "envlock.config.js"),
       `export default { this is not valid javascript }`,
     );
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
     const config = await resolveConfig(tmpDir);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("envlock.config.js"));
     expect(config).toBeNull();

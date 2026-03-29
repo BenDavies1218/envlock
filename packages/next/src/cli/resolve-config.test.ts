@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { log } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
 
 let tmpDir: string;
@@ -75,7 +76,7 @@ describe("resolveConfig", () => {
       join(tmpDir, "next.config.js"),
       `export default { this is not valid javascript }`,
     );
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
     process.env["ENVLOCK_OP_ENV_ID"] = "fallback-id";
     await resolveConfig(tmpDir);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("next.config.js"));
