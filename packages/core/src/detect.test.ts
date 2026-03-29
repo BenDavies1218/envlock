@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("node:child_process", () => ({
   execFileSync: vi.fn(),
@@ -6,6 +6,10 @@ vi.mock("node:child_process", () => ({
 
 const { execFileSync } = await import("node:child_process");
 const { checkBinary, hasBinary } = await import("./detect.js");
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 describe("hasBinary", () => {
   it("returns true when binary is found", () => {
