@@ -34,7 +34,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "envlock-core": "workspace:*",
+    "envlock-core": "^0.4.0",
     "commander": "^12.0.0"
   },
   "peerDependencies": {
