@@ -48,7 +48,24 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
     throw new Error(`[envlock] No command specified. Available commands: ${available}`);
   }
 
-  if (config?.commands && firstArg in config.commands) {
+  if (firstArg === "run") {
+    // Explicit run subcommand — bypasses config, executes any command with secrets injected
+    if (config?.commands?.["run"]) {
+      console.warn(
+        '[envlock] Warning: "run" is a reserved subcommand. The config command named "run" is ignored.\n' +
+        'Rename it in envlock.config.js to use it as a named command.',
+      );
+    }
+    const runArgs = passthrough.slice(1);
+    if (runArgs.length === 0) {
+      throw new Error(
+        "[envlock] Usage: envlock run <command> [args...]\n" +
+        "Example: envlock run node server.js --port 4000",
+      );
+    }
+    command = runArgs[0]!;
+    args = runArgs.slice(1);
+  } else if (config?.commands && firstArg in config.commands) {
     // Named command from config — split into binary + args
     const cmdString = config.commands[firstArg];
     if (!cmdString || cmdString.trim() === "") {
