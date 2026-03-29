@@ -116,3 +116,70 @@ describe("run", () => {
     }));
   });
 });
+
+describe("run subcommand", () => {
+  it("executes ad-hoc command bypassing config", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["run", "node", "server.js"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "node",
+      args: ["server.js"],
+      environment: "development",
+    }));
+  });
+
+  it("passes extra flags through to the command", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["run", "node", "server.js", "--port", "4000"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "node",
+      args: ["server.js", "--port", "4000"],
+    }));
+  });
+
+  it("respects --production flag", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["run", "node", "server.js", "--production"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      environment: "production",
+    }));
+  });
+
+  it("respects --staging flag", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["run", "node", "server.js", "--staging"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      environment: "staging",
+    }));
+  });
+
+  it("throws with usage hint when no command provided after run", async () => {
+    // env var set to prevent the onePasswordEnvId guard from throwing before the usage check
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await expect(run(["run"], tmpDir)).rejects.toThrow(/Usage: envlock run/i);
+  });
+
+  it("bypasses named commands in config", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "cfg-id", commands: { dev: "node server.js" } };`,
+    );
+    await run(["run", "python", "app.py"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "python",
+      args: ["app.py"],
+    }));
+  });
+
+  it("warns when config has a reserved 'run' command key", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "cfg-id", commands: { run: "node migrate.js" } };`,
+    );
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await run(["run", "node", "server.js"], tmpDir);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('"run" is a reserved subcommand'));
+    warnSpy.mockRestore();
+  });
+});

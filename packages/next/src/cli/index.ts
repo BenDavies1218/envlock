@@ -1,5 +1,6 @@
+import { pathToFileURL } from "node:url";
 import { Command } from "commander";
-import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath } from "envlock-core";
+import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath, validateOnePasswordEnvId } from "envlock-core";
 import type { Environment } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
 
@@ -64,12 +65,44 @@ function getEnvironment(
   return defaultEnv;
 }
 
+export async function handleRunCommand(
+  cmd: string | undefined,
+  cmdArgs: string[],
+  opts: { staging?: boolean; production?: boolean },
+): Promise<void> {
+  if (!cmd) {
+    throw new Error(
+      "[envlock] Usage: envlock run <command> [args...]\n" +
+      "Example: envlock run node server.js --port 4000",
+    );
+  }
+  const environment = getEnvironment(opts, ENVIRONMENTS.development);
+  const config = await resolveConfig(process.cwd());
+  const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config.onePasswordEnvId;
+  if (!onePasswordEnvId) {
+    throw new Error(
+      "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
+    );
+  }
+  validateOnePasswordEnvId(onePasswordEnvId);
+  const envFile = config.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
+  validateEnvFilePath(envFile, process.cwd());
+  runWithSecrets({
+    envFile,
+    environment,
+    onePasswordEnvId,
+    command: cmd,
+    args: cmdArgs,
+  });
+}
+
 const program = new Command("envlock");
 
 program
   .name("envlock")
   .description("Run Next.js commands with 1Password + dotenvx secret injection")
-  .version("0.1.0");
+  .version("0.3.0")
+  .enablePositionalOptions();
 
 for (const [subcommand, defaultEnv] of Object.entries(
   SUPPORTED_SUBCOMMANDS,
@@ -85,4 +118,26 @@ for (const [subcommand, defaultEnv] of Object.entries(
   program.addCommand(cmd);
 }
 
-program.parse(process.argv);
+const runCmd = new Command("run")
+  .description("Run any command with 1Password + dotenvx secret injection")
+  .allowUnknownOption(true)
+  .passThroughOptions(true);
+
+addEnvFlags(runCmd).action(
+  async (opts: { staging?: boolean; production?: boolean }) => {
+    const [cmd, ...cmdArgs] = runCmd.args;
+    try {
+      await handleRunCommand(cmd, cmdArgs, opts);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    }
+  },
+);
+
+program.addCommand(runCmd);
+
+// Binary entry point — only runs when executed directly
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  program.parse(process.argv);
+}
