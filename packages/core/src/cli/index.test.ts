@@ -177,9 +177,27 @@ describe("run subcommand", () => {
       join(tmpDir, "envlock.config.js"),
       `export default { onePasswordEnvId: "cfg-id", commands: { run: "node migrate.js" } };`,
     );
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     await run(["run", "node", "server.js"], tmpDir);
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('"run" is a reserved subcommand'));
-    warnSpy.mockRestore();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('"run" is a reserved subcommand'));
+    stderrSpy.mockRestore();
+  });
+
+  it("strips --debug from argv before processing", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["--debug", "node", "server.js"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "node",
+      args: ["server.js"],
+    }));
+  });
+
+  it("strips -d from argv before processing", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "test-id";
+    await run(["-d", "node", "server.js"], tmpDir);
+    expect(runWithSecrets).toHaveBeenCalledWith(expect.objectContaining({
+      command: "node",
+      args: ["server.js"],
+    }));
   });
 });

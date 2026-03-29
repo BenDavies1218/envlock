@@ -1,9 +1,11 @@
 import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
 import { ENVIRONMENTS } from "../types.js";
 import type { Environment } from "../types.js";
 import { runWithSecrets } from "../invoke.js";
 import { validateEnvFilePath, validateOnePasswordEnvId } from "../validate.js";
 import { resolveConfig } from "./resolve-config.js";
+import { log, setVerbose } from "../logger.js";
 
 const ARGUMENT_FLAGS = {
   staging: "--staging",
@@ -27,6 +29,13 @@ function splitCommand(cmd: string): string[] {
 }
 
 export async function run(argv: string[], cwd: string = process.cwd()): Promise<void> {
+  // Strip --debug / -d and enable verbose logging
+  const debugIdx = argv.findIndex((a) => a === "--debug" || a === "-d");
+  if (debugIdx !== -1) {
+    setVerbose(true);
+    argv = argv.filter((_, i) => i !== debugIdx);
+  }
+
   const environment: Environment = argv.includes(ARGUMENT_FLAGS.production)
     ? ENVIRONMENTS.production
     : argv.includes(ARGUMENT_FLAGS.staging)
@@ -51,8 +60,8 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   if (firstArg === "run") {
     // Explicit run subcommand — bypasses config, executes any command with secrets injected
     if (config?.commands?.["run"]) {
-      console.warn(
-        '[envlock] Warning: "run" is a reserved subcommand. The config command named "run" is ignored.\n' +
+      log.warn(
+        '"run" is a reserved subcommand. The config command named "run" is ignored.\n' +
         'Rename it in envlock.config.js to use it as a named command.',
       );
     }
@@ -98,13 +107,30 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   const envFile = config?.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
   validateEnvFilePath(envFile, cwd);
 
+  log.debug(`Environment: ${environment}`);
+  log.debug(`Env file: ${envFile}`);
+  log.debug(`Command: ${command} ${args.join(" ")}`);
+
   runWithSecrets({ envFile, environment, onePasswordEnvId, command, args });
 }
 
-// Binary entry point — only runs when executed directly
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+// Binary entry point — only runs when executed directly.
+// realpathSync resolves symlinks so that npm-installed bin symlinks
+// (node_modules/.bin/envlock → ../envlock-core/dist/cli/index.js)
+// match import.meta.url, which always reflects the real file path.
+const _resolvedArgv1 = (() => {
+  try { return realpathSync(process.argv[1] ?? ""); }
+  catch { return process.argv[1] ?? ""; }
+})();
+
+if (import.meta.url === pathToFileURL(_resolvedArgv1).href) {
+  // Enable verbose before run() so the resolved path debug line is shown
+  if (process.argv.includes("--debug") || process.argv.includes("-d")) {
+    setVerbose(true);
+  }
+  log.debug(`Resolved argv[1]: ${_resolvedArgv1}`);
   run(process.argv.slice(2)).catch((err: unknown) => {
-    console.error(err instanceof Error ? err.message : String(err));
+    log.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
   });
 }
