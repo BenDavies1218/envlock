@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { log } from "./logger.js";
 
 const WHICH = process.platform === "win32" ? "where" : "which";
 
@@ -13,7 +14,7 @@ export function hasBinary(name: string): boolean {
 
 export function checkBinary(name: string, installHint: string): void {
   if (!hasBinary(name)) {
-    console.error(`[envlock] '${name}' not found in PATH.\n${installHint}`);
-    process.exit(1);
+    throw new Error(`[envlock] '${name}' not found in PATH.\n${installHint}`);
   }
+  log.debug(`Binary check: ${name} found`);
 }
