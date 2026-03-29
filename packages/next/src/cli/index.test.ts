@@ -5,6 +5,8 @@ vi.mock("envlock-core", () => ({
   runWithSecrets: vi.fn(),
   validateEnvFilePath: vi.fn(),
   validateOnePasswordEnvId: vi.fn(),
+  log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  setVerbose: vi.fn(),
 }));
 
 vi.mock("./resolve-config.js", () => ({
@@ -71,5 +73,10 @@ describe("handleRunCommand", () => {
       command: "node",
       args: ["server.js", "--port", "4000"],
     }));
+  });
+
+  it("runs without error given valid inputs", async () => {
+    await handleRunCommand("node", ["server.js"], {});
+    expect(runWithSecrets).toHaveBeenCalled();
   });
 });
