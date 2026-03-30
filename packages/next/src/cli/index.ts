@@ -71,7 +71,7 @@ export async function runNextCommand(
   log.debug(`Env file: ${envFile}`);
   log.debug(`Command: next ${subcommand} ${finalArgs.join(" ")}`);
 
-  runWithSecrets({
+  await runWithSecrets({
     envFile,
     environment,
     onePasswordEnvId: config.onePasswordEnvId,
@@ -121,7 +121,7 @@ export async function handleRunCommand(
   log.debug(`Environment: ${environment}`);
   log.debug(`Env file: ${envFile}`);
   log.debug(`Command: ${cmd} ${cmdArgs.join(" ")}`);
-  runWithSecrets({
+  await runWithSecrets({
     envFile,
     environment,
     onePasswordEnvId,

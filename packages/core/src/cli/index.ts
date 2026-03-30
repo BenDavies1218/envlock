@@ -111,7 +111,7 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   log.debug(`Env file: ${envFile}`);
   log.debug(`Command: ${command} ${args.join(" ")}`);
 
-  runWithSecrets({ envFile, environment, onePasswordEnvId, command, args });
+  await runWithSecrets({ envFile, environment, onePasswordEnvId, command, args });
 }
 
 // Binary entry point — only runs when executed directly.

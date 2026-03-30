@@ -1,6 +1,6 @@
 {
   "name": "envlock-core",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "type": "module",
   "description": "Core 1Password + dotenvx secret injection logic for envlock",
   "license": "MIT",
@@ -22,10 +22,12 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
     }
   },
+  "main": "./dist/index.cjs",
   "files": [
     "dist"
   ],
@@ -34,6 +36,9 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.59.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
