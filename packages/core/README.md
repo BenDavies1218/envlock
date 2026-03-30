@@ -51,6 +51,8 @@ Then wire up your `package.json` scripts:
 }
 ```
 
+> **Note:** `run` is a reserved subcommand name. If you define a command named `"run"` in `envlock.config.js`, it will be ignored with a warning. Rename it to something else (e.g. `migrate`) to use it as a named command.
+
 Pass `--staging` or `--production` to switch environments. For ad-hoc commands, pass the command directly without a config key:
 
 ```bash
@@ -91,6 +93,10 @@ Returns `true` if `name` is found in `PATH`.
 
 Calls `process.exit(1)` with a helpful message if `name` is not in `PATH`.
 
+### `setVerbose(verbose: boolean)`
+
+Enables or disables debug-level log output. When `true`, envlock logs the resolved config path, environment, env file, and spawned command to stderr. Called automatically when `--debug` / `-d` is passed on the CLI.
+
 ## Types
 
 ```ts
@@ -121,6 +127,10 @@ interface RunWithSecretsOptions {
   args: string[];
 }
 ```
+
+## Security model
+
+envlock uses a two-phase secret injection model — see [Security model](../../README.md#security-model) in the root README for a full explanation.
 
 ## License
 
