@@ -9,14 +9,16 @@ No secrets ever touch your shell history, CI environment variables, or unencrypt
 
 ## Packages
 
-| Package | Version | Description |
-| ------- | ------- | ----------- |
-| [`envlock-next`](./packages/next) | [![npm](https://img.shields.io/npm/v/envlock-next)](https://www.npmjs.com/package/envlock-next) | Next.js plugin and `envlock` CLI |
+| Package                           | Version                                                                                         | Description                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| [`envlock-next`](./packages/next) | [![npm](https://img.shields.io/npm/v/envlock-next)](https://www.npmjs.com/package/envlock-next) | Next.js plugin and `envlock` CLI            |
 | [`envlock-core`](./packages/core) | [![npm](https://img.shields.io/npm/v/envlock-core)](https://www.npmjs.com/package/envlock-core) | Framework-agnostic CLI and shared utilities |
 
 Use `envlock-next` for Next.js projects. Use `envlock-core` directly for any other Node.js project.
 
 ## How it works
+
+![envlock runtime flow](./envlock_runtime_flow.svg)
 
 ```
 1Password (secrets store)
@@ -53,10 +55,10 @@ On install, `envlock-next` automatically rewrites your `package.json` scripts:
 Add `withEnvlock` to your `next.config.js` (or `next.config.ts`):
 
 ```ts
-import { withEnvlock } from 'envlock-next';
+import { withEnvlock } from "envlock-next";
 
 export default withEnvlock(nextConfig, {
-  onePasswordEnvId: 'your-1password-env-id',
+  onePasswordEnvId: "your-1password-env-id",
 });
 ```
 
@@ -121,10 +123,10 @@ envlock run node migrate.js
 
 ```js
 export default {
-  onePasswordEnvId: 'your-1password-env-id',
+  onePasswordEnvId: "your-1password-env-id",
   commands: {
-    dev: 'node server.js --watch',
-    start: 'node server.js',
+    dev: "node server.js --watch",
+    start: "node server.js",
   },
 };
 ```
@@ -132,18 +134,18 @@ export default {
 ### Programmatic API
 
 ```ts
-import { findFreePort, runWithSecrets, log } from 'envlock-core';
+import { findFreePort, runWithSecrets, log } from "envlock-core";
 
 // Find a free port starting from preferred
 const port = await findFreePort(3000); // returns 3000, or 3001 if taken, etc.
 
 // Run a command with secrets injected
 runWithSecrets({
-  envFile: '.env.development',
-  environment: 'development',
-  onePasswordEnvId: 'your-env-id',
-  command: 'node',
-  args: ['server.js'],
+  envFile: ".env.development",
+  environment: "development",
+  onePasswordEnvId: "your-env-id",
+  command: "node",
+  args: ["server.js"],
 });
 ```
 
