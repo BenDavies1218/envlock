@@ -58,7 +58,7 @@ describe("handleRunCommand", () => {
   });
 
   it("throws when no onePasswordEnvId in config or env var", async () => {
-    vi.mocked(resolveConfig).mockResolvedValue({});
+    vi.mocked(resolveConfig).mockResolvedValue({} as never);
     await expect(handleRunCommand("node", ["server.js"], {})).rejects.toThrow(/onePasswordEnvId/i);
   });
 
