@@ -16,7 +16,7 @@ pnpm add envlock-next
 
 ## Setup
 
-### 1. Configure `next.config.js`
+### 1. Configure `next.config.js` / `next.config.ts` / `next.config.mjs`
 
 ```js
 import { withEnvlock } from 'envlock-next';
@@ -46,6 +46,20 @@ Find your **Environment ID** in 1Password → Settings → Developer → Environ
 ```
 
 That's it. `envlock dev` will pull your dotenvx private key from 1Password, decrypt `.env.development`, and start Next.js with your secrets injected.
+
+## Run any command
+
+Use `envlock run` to inject secrets into any arbitrary command:
+
+```bash
+envlock run node migrate.js
+envlock run curl https://api.example.com --staging
+envlock run <command> [args...] --production
+```
+
+`--staging` and `--production` flags work the same as with `dev`/`build`/`start`.
+
+---
 
 ## Environment flags
 
@@ -95,6 +109,19 @@ In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly. envlock detects this and skips `
   env:
     DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
 ```
+
+## Debugging
+
+**Debug output:**
+
+```bash
+envlock dev --debug
+envlock dev -d
+```
+
+## How it works
+
+envlock uses a two-phase secret injection model — see [Security model](../../README.md#security-model) in the root README for a full explanation.
 
 ## License
 
