@@ -2,7 +2,7 @@
   "name": "envlock-monorepo",
   "private": true,
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r --workspace-concurrency=1 build",
     "test": "pnpm -r test"
   },
   "devDependencies": {
