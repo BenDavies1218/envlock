@@ -18,19 +18,7 @@ Use `envlock-next` for Next.js projects. Use `envlock-core` directly for any oth
 
 ## How it works
 
-![envlock runtime flow](./envlock_runtime_flow.svg)
-
-```
-1Password (secrets store)
-        ↓  op run
-dotenvx (decrypts .env.* files)
-        ↓  dotenvx run
-your command (next dev, node server.js, …)
-```
-
-`envlock` wraps your commands. It pulls the dotenvx private key from 1Password at runtime, decrypts your encrypted `.env` file, and injects the env vars into the process. In CI, supply the private key directly via `DOTENV_PRIVATE_KEY_<ENV>` and `op run` is skipped automatically.
-
----
+## ![envlock runtime flow](./envlock_runtime_flow.svg)
 
 ## envlock-next
 
@@ -43,10 +31,6 @@ npm install envlock-next
 On install, `envlock-next` automatically rewrites your `package.json` scripts:
 
 ```json
-// before
-{ "dev": "next dev", "build": "next build", "start": "next start" }
-
-// after
 { "dev": "envlock dev", "build": "envlock build", "start": "envlock start" }
 ```
 
@@ -62,7 +46,7 @@ export default withEnvlock(nextConfig, {
 });
 ```
 
-Or set the `ENVLOCK_OP_ENV_ID` environment variable instead.
+Or set the `ENVLOCK_OP_ENV_ID` environment variable instead in a root level .env.
 
 ### Usage
 
