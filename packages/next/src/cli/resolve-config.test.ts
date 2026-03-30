@@ -71,6 +71,34 @@ describe("resolveConfig", () => {
     await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
   });
 
+  it("attempts next.config.ts before next.config.mjs", async () => {
+    // Plain JS written to a .ts file — loads natively on Node 22+, falls through on older Node
+    writeFileSync(
+      join(tmpDir, "next.config.ts"),
+      `export default { __envlock: { onePasswordEnvId: "from-ts" } };`,
+    );
+    writeFileSync(
+      join(tmpDir, "next.config.mjs"),
+      `export default { __envlock: { onePasswordEnvId: "from-mjs" } };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    // On Node 22+ reads .ts; on older Node falls through to .mjs — both are correct
+    expect(["from-ts", "from-mjs"]).toContain(config.onePasswordEnvId);
+  });
+
+  it("falls back to next.config.mjs when next.config.ts fails to import", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.ts"),
+      `this is not valid javascript at all !!!`,
+    );
+    writeFileSync(
+      join(tmpDir, "next.config.mjs"),
+      `export default { __envlock: { onePasswordEnvId: "from-mjs-fallback" } };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config.onePasswordEnvId).toBe("from-mjs-fallback");
+  });
+
   it("warns when a config file has a syntax error instead of silently skipping", async () => {
     writeFileSync(
       join(tmpDir, "next.config.js"),

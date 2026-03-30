@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import type { EnvlockOptions } from "envlock-core";
 import { validateOnePasswordEnvId, log } from "envlock-core";
 
-const CONFIG_CANDIDATES = ["next.config.js", "next.config.mjs"];
+const CONFIG_CANDIDATES = ["next.config.ts", "next.config.js", "next.config.mjs"];
 
 export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
   for (const candidate of CONFIG_CANDIDATES) {
