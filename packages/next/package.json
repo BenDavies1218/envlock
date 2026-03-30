@@ -22,10 +22,12 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types":   "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import":  "./dist/index.js"
     }
   },
+  "main": "./dist/index.cjs",
   "files": [
     "dist"
   ],
