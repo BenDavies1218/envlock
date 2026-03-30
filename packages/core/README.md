@@ -93,7 +93,7 @@ Returns `true` if `name` is found in `PATH`.
 
 Calls `process.exit(1)` with a helpful message if `name` is not in `PATH`.
 
-### `setVerbose(verbose: boolean)`
+### `setVerbose(verbose)`
 
 Enables or disables debug-level log output. When `true`, envlock logs the resolved config path, environment, env file, and spawned command to stderr. Called automatically when `--debug` / `-d` is passed on the CLI.
 
