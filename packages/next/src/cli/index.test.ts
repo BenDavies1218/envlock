@@ -7,20 +7,15 @@ vi.mock("envlock-core", () => ({
   validateOnePasswordEnvId: vi.fn(),
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   setVerbose: vi.fn(),
+  findFreePort: vi.fn(),
 }));
 
 vi.mock("./resolve-config.js", () => ({
   resolveConfig: vi.fn(),
 }));
 
-vi.mock("./find-port.js", () => ({
-  findFreePort: vi.fn(),
-}));
-
-const { runWithSecrets, validateOnePasswordEnvId } = await import("envlock-core");
-const { log } = await import("envlock-core");
+const { runWithSecrets, validateOnePasswordEnvId, findFreePort, log } = await import("envlock-core");
 const { resolveConfig } = await import("./resolve-config.js");
-const { findFreePort } = await import("./find-port.js");
 const { handleRunCommand, runNextCommand } = await import("./index.js");
 
 beforeEach(() => {

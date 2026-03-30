@@ -5,7 +5,7 @@ import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath, validateOnePasswordE
 import type { Environment } from "envlock-core";
 import { log, setVerbose } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
-import { findFreePort } from "./find-port.js";
+import { findFreePort } from "envlock-core";
 
 const SUPPORTED_SUBCOMMANDS = {
   dev: "development",
