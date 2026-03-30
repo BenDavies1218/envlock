@@ -36,8 +36,8 @@ importers:
         specifier: ^12.0.0
         version: 12.1.0
       envlock-core:
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^0.6.0
+        version: 0.6.0
     devDependencies:
       '@types/node':
         specifier: ^20.14.10
@@ -696,8 +696,8 @@ packages:
     resolution: {integrity: sha512-wG99Zcfcys9fZux7Cft8BAX/YrOJLJSZ3jyYPfhZHqN2E+Ffx+QXBDsv3gubEgPtV6dTzJMSQUwk1H98/t/0wQ==}
     engines: {bun: '>=1', deno: '>=2', node: '>=16'}
 
-  envlock-core@0.5.0:
-    resolution: {integrity: sha512-POtZ8P/ATeGH0DO0IrDMDvrYrL1wOcpIpttXMNj7ccO4NcRLDhmdEC+Kz0g1vgIWjwLVxEIaCEGK4/K42jRVhA==}
+  envlock-core@0.6.0:
+    resolution: {integrity: sha512-I6cEdtnQW1OAA4B9/FWeDJVUjQi5YioFgESxfGfbJ8zGiQ6jZ5KJeb5uUIbpCz4aHqY0OQT9ypGTt+Abg+Dl9A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1582,7 +1582,7 @@ snapshots:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
 
-  envlock-core@0.5.0: {}
+  envlock-core@0.6.0: {}
 
   es-module-lexer@1.7.0: {}
 
