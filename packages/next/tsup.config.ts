@@ -14,6 +14,7 @@ export default defineConfig([
     dts: false,
     clean: false,
     outDir: "dist",
+    noExternal: ["envlock-core"],
     banner: {
       js: "#!/usr/bin/env node",
     },
