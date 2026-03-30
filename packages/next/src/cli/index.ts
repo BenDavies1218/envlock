@@ -5,6 +5,7 @@ import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath, validateOnePasswordE
 import type { Environment } from "envlock-core";
 import { log, setVerbose } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
+import { findFreePort } from "./find-port.js";
 
 const SUPPORTED_SUBCOMMANDS = {
   dev: "development",
@@ -31,7 +32,7 @@ const ARGUMENT_FLAGS = {
   production: "--production",
 } as const;
 
-async function runNextCommand(
+export async function runNextCommand(
   subcommand: Subcommand,
   environment: Environment,
   passthroughArgs: string[],
@@ -40,18 +41,42 @@ async function runNextCommand(
   const envFile =
     config.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
 
+  validateEnvFilePath(envFile, process.cwd());
+
+  let finalArgs = [...passthroughArgs];
+
+  // Port switching — dev only
+  if (subcommand === "dev") {
+    const portFlagIndex = finalArgs.findIndex(
+      (a) => a === "--port" || a === "-p",
+    );
+    const requestedPort =
+      portFlagIndex !== -1
+        ? parseInt(finalArgs[portFlagIndex + 1] ?? "3000", 10)
+        : 3000;
+
+    const freePort = await findFreePort(requestedPort);
+
+    if (freePort !== requestedPort) {
+      log.warn(`Port ${requestedPort} in use, switching to ${freePort}`);
+    }
+
+    if (portFlagIndex !== -1) {
+      finalArgs.splice(portFlagIndex, 2);
+    }
+    finalArgs = ["-p", String(freePort), ...finalArgs];
+  }
+
   log.debug(`Environment: ${environment}`);
   log.debug(`Env file: ${envFile}`);
-  log.debug(`Command: next ${subcommand} ${passthroughArgs.join(" ")}`);
-
-  validateEnvFilePath(envFile, process.cwd());
+  log.debug(`Command: next ${subcommand} ${finalArgs.join(" ")}`);
 
   runWithSecrets({
     envFile,
     environment,
     onePasswordEnvId: config.onePasswordEnvId,
     command: "next",
-    args: [subcommand, ...passthroughArgs],
+    args: [subcommand, ...finalArgs],
   });
 }
 

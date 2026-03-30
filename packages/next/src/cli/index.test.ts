@@ -13,14 +13,21 @@ vi.mock("./resolve-config.js", () => ({
   resolveConfig: vi.fn(),
 }));
 
+vi.mock("./find-port.js", () => ({
+  findFreePort: vi.fn(),
+}));
+
 const { runWithSecrets, validateOnePasswordEnvId } = await import("envlock-core");
+const { log } = await import("envlock-core");
 const { resolveConfig } = await import("./resolve-config.js");
-const { handleRunCommand } = await import("./index.js");
+const { findFreePort } = await import("./find-port.js");
+const { handleRunCommand, runNextCommand } = await import("./index.js");
 
 beforeEach(() => {
   vi.clearAllMocks();
   delete process.env["ENVLOCK_OP_ENV_ID"];
   vi.mocked(resolveConfig).mockResolvedValue({ onePasswordEnvId: "cfg-id" });
+  vi.mocked(findFreePort).mockResolvedValue(3000);
 });
 
 afterEach(() => {
@@ -78,5 +85,46 @@ describe("handleRunCommand", () => {
   it("runs without error given valid inputs", async () => {
     await handleRunCommand("node", ["server.js"], {});
     expect(runWithSecrets).toHaveBeenCalled();
+  });
+});
+
+describe("runNextCommand port switching", () => {
+  it("passes the default port 3000 to next when free", async () => {
+    vi.mocked(findFreePort).mockResolvedValue(3000);
+    vi.mocked(resolveConfig).mockResolvedValue({ onePasswordEnvId: "id" });
+
+    await runNextCommand("dev", "development", []);
+
+    expect(findFreePort).toHaveBeenCalledWith(3000);
+    expect(runWithSecrets).toHaveBeenCalledWith(
+      expect.objectContaining({ args: expect.arrayContaining(["-p", "3000"]) }),
+    );
+  });
+
+  it("logs a notice and switches port when preferred is taken", async () => {
+    vi.mocked(findFreePort).mockResolvedValue(3001);
+    vi.mocked(resolveConfig).mockResolvedValue({ onePasswordEnvId: "id" });
+    const warn = vi.spyOn(log, "warn");
+
+    await runNextCommand("dev", "development", []);
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("3001"));
+  });
+
+  it("respects an explicit --port arg passed by the user", async () => {
+    vi.mocked(findFreePort).mockResolvedValue(4000);
+    vi.mocked(resolveConfig).mockResolvedValue({ onePasswordEnvId: "id" });
+
+    await runNextCommand("dev", "development", ["--port", "4000"]);
+
+    expect(findFreePort).toHaveBeenCalledWith(4000);
+  });
+
+  it("does not run port switching for build subcommand", async () => {
+    vi.mocked(resolveConfig).mockResolvedValue({ onePasswordEnvId: "id" });
+
+    await runNextCommand("build", "production", []);
+
+    expect(findFreePort).not.toHaveBeenCalled();
   });
 });
