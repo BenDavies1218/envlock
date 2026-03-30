@@ -53,11 +53,11 @@ Use `envlock run` to inject secrets into any arbitrary command:
 
 ```bash
 envlock run node migrate.js
-envlock run curl https://api.example.com --staging
-envlock run <command> [args...] --production
+envlock run --staging curl https://api.example.com
+envlock run --production <command> [args...]
 ```
 
-`--staging` and `--production` flags work the same as with `dev`/`build`/`start`.
+Pass `--staging` or `--production` **before** the command to select the environment (flags after the command are forwarded to the child process).
 
 ---
 
@@ -112,14 +112,15 @@ In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly. envlock detects this and skips `
 
 ## Debugging
 
-**Debug output:**
+**Debug output** (works with any subcommand):
 
 ```bash
 envlock dev --debug
-envlock dev -d
+envlock build -d
+envlock run --debug node server.js
 ```
 
-## How it works
+## Security model
 
 envlock uses a two-phase secret injection model — see [Security model](../../README.md#security-model) in the root README for a full explanation.
 
