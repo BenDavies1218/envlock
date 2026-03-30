@@ -24,10 +24,10 @@ Use `envlock-next` for Next.js projects. Use `envlock-core` directly for any oth
 
 envlock injects secrets in two phases so they never appear in shell history, CI environment variables, or unencrypted files:
 
-1. **`op run` phase** — envlock re-invokes itself wrapped inside `op run --environment <id>`. The 1Password CLI resolves your secrets and injects `DOTENV_PRIVATE_KEY_<ENV>` into the child process environment, then hands control back.
+1. **`op run` phase** — envlock re-invokes itself wrapped inside `op run --environment <id>`. The 1Password CLI resolves your secrets and injects `DOTENV_PRIVATE_KEY_<ENV>` (e.g. `DOTENV_PRIVATE_KEY_PRODUCTION`) into the child process environment, then hands control back.
 2. **`dotenvx` phase** — the re-invoked process detects `DOTENV_PRIVATE_KEY_<ENV>` already set, skips `op run`, and calls the `dotenvx` JS API in-process to decrypt the encrypted `.env.*` file. The target command is then spawned with secrets in its environment.
 
-In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly (e.g. from a vault secret). envlock detects it and skips the `op run` phase entirely.
+In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly (e.g. a GitHub Actions secret). envlock detects it and skips the `op run` phase entirely.
 
 ## envlock-next
 
