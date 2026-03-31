@@ -1,23 +1,19 @@
 import { pathToFileURL } from "node:url";
 import { realpathSync } from "node:fs";
-import { ENVIRONMENTS } from "../types.js";
-import type { Environment } from "../types.js";
+import { ENVIRONMENTS, ARGUMENT_FLAGS, DEFAULT_ENV_FILES } from "../types.js";
+import type { Environment, EnvlockConfig } from "../types.js";
 import { runWithSecrets } from "../invoke.js";
 import { validateEnvFilePath, validateOnePasswordEnvId } from "../validate.js";
 import { resolveConfig } from "./resolve-config.js";
 import { log, setVerbose } from "../logger.js";
 
-const ARGUMENT_FLAGS = {
-  staging: "--staging",
-  production: "--production",
-} as const;
-
-const DEFAULT_ENV_FILES: Record<Environment, string> = {
-  development: ".env.development",
-  staging: ".env.staging",
-  production: ".env.production",
-};
-
+/**
+ * Splits a command string into tokens, respecting single and double quoted groups.
+ *
+ * Limitation: escaped quotes inside quoted strings (e.g. "it\"s") are NOT supported.
+ * Inputs with escaped quotes will produce incorrect tokens. Use shell-quote if you
+ * need full POSIX shell parsing.
+ */
 function splitCommand(cmd: string): string[] {
   const parts: string[] = [];
   const re = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
@@ -28,29 +24,35 @@ function splitCommand(cmd: string): string[] {
   return parts;
 }
 
-export async function run(argv: string[], cwd: string = process.cwd()): Promise<void> {
-  // Strip --debug / -d and enable verbose logging
-  const debugIdx = argv.findIndex((a) => a === "--debug" || a === "-d");
-  if (debugIdx !== -1) {
-    setVerbose(true);
-    argv = argv.filter((_, i) => i !== debugIdx);
-  }
+export interface ParsedArgs {
+  environment: Environment;
+  passthrough: string[];
+  debug: boolean;
+}
 
-  const environment: Environment = argv.includes(ARGUMENT_FLAGS.production)
+export function parseArgs(argv: string[]): ParsedArgs {
+  const debugIdx = argv.findIndex((a) => a === "--debug" || a === "-d");
+  const debug = debugIdx !== -1;
+  const withoutDebug = debug ? argv.filter((_, i) => i !== debugIdx) : argv;
+
+  const environment: Environment = withoutDebug.includes(ARGUMENT_FLAGS.production)
     ? ENVIRONMENTS.production
-    : argv.includes(ARGUMENT_FLAGS.staging)
+    : withoutDebug.includes(ARGUMENT_FLAGS.staging)
     ? ENVIRONMENTS.staging
     : ENVIRONMENTS.development;
 
-  const passthrough = argv.filter(
+  const passthrough = withoutDebug.filter(
     (f) => f !== ARGUMENT_FLAGS.staging && f !== ARGUMENT_FLAGS.production,
   );
 
-  const config = await resolveConfig(cwd);
-  const firstArg = passthrough[0];
+  return { environment, passthrough, debug };
+}
 
-  let command: string;
-  let args: string[];
+export function resolveCommand(
+  passthrough: string[],
+  config: EnvlockConfig | null,
+): { command: string; args: string[] } {
+  const firstArg = passthrough[0];
 
   if (firstArg === undefined) {
     const available = config?.commands ? Object.keys(config.commands).join(", ") : "none";
@@ -58,7 +60,6 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   }
 
   if (firstArg === "run") {
-    // Explicit run subcommand — bypasses config, executes any command with secrets injected
     if (config?.commands?.["run"]) {
       log.warn(
         '"run" is a reserved subcommand. The config command named "run" is ignored.\n' +
@@ -72,30 +73,35 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
         "Example: envlock run node server.js --port 4000",
       );
     }
-    command = runArgs[0]!;
-    args = runArgs.slice(1);
-  } else if (config?.commands && firstArg in config.commands) {
-    // Named command from config — split into binary + args
+    return { command: runArgs[0]!, args: runArgs.slice(1) };
+  }
+
+  if (config?.commands && firstArg in config.commands) {
     const cmdString = config.commands[firstArg];
     if (!cmdString || cmdString.trim() === "") {
       throw new Error(`[envlock] Command "${firstArg}" is empty in envlock.config.js.`);
     }
     const parts = splitCommand(cmdString);
-    command = parts[0]!;
-    args = parts.slice(1);
-  } else if (config?.commands && Object.keys(config.commands).length > 0 && passthrough.length === 1) {
-    // Looks like a named command attempt but no match
+    return { command: parts[0]!, args: parts.slice(1) };
+  }
+
+  if (config?.commands && Object.keys(config.commands).length > 0 && passthrough.length === 1) {
     throw new Error(
       `[envlock] Unknown command "${firstArg}". Available: ${Object.keys(config.commands).join(", ")}`,
     );
-  } else {
-    // Ad-hoc command
-    command = firstArg;
-    args = passthrough.slice(1);
   }
 
-  const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config?.onePasswordEnvId;
+  return { command: firstArg, args: passthrough.slice(1) };
+}
 
+export async function run(argv: string[], cwd: string = process.cwd()): Promise<void> {
+  const { environment, passthrough, debug } = parseArgs(argv);
+  if (debug) setVerbose(true);
+
+  const config = await resolveConfig(cwd);
+  const { command, args } = resolveCommand(passthrough, config);
+
+  const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config?.onePasswordEnvId;
   if (!onePasswordEnvId) {
     throw new Error(
       "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
@@ -124,7 +130,6 @@ const _resolvedArgv1 = (() => {
 })();
 
 if (import.meta.url === pathToFileURL(_resolvedArgv1).href) {
-  // Enable verbose before run() so the resolved path debug line is shown
   if (process.argv.includes("--debug") || process.argv.includes("-d")) {
     setVerbose(true);
   }

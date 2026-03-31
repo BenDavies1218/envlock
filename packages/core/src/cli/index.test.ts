@@ -12,7 +12,7 @@ vi.mock("../validate.js", () => ({
 }));
 
 const { runWithSecrets } = await import("../invoke.js");
-const { run } = await import("./index.js");
+const { run, parseArgs, resolveCommand } = await import("./index.js");
 
 let tmpDir: string;
 
@@ -26,6 +26,68 @@ beforeEach(() => {
 afterEach(() => {
   rmSync(tmpDir, { recursive: true, force: true });
   delete process.env["ENVLOCK_OP_ENV_ID"];
+});
+
+describe("parseArgs", () => {
+  it("defaults to development environment", () => {
+    const result = parseArgs(["node", "server.js"]);
+    expect(result.environment).toBe("development");
+    expect(result.passthrough).toEqual(["node", "server.js"]);
+    expect(result.debug).toBe(false);
+  });
+
+  it("detects --production flag and strips it from passthrough", () => {
+    const result = parseArgs(["node", "server.js", "--production"]);
+    expect(result.environment).toBe("production");
+    expect(result.passthrough).toEqual(["node", "server.js"]);
+  });
+
+  it("detects --staging flag and strips it from passthrough", () => {
+    const result = parseArgs(["node", "server.js", "--staging"]);
+    expect(result.environment).toBe("staging");
+    expect(result.passthrough).toEqual(["node", "server.js"]);
+  });
+
+  it("strips --debug flag and sets debug=true", () => {
+    const result = parseArgs(["--debug", "node", "server.js"]);
+    expect(result.debug).toBe(true);
+    expect(result.passthrough).toEqual(["node", "server.js"]);
+  });
+
+  it("strips -d flag and sets debug=true", () => {
+    const result = parseArgs(["-d", "node", "server.js"]);
+    expect(result.debug).toBe(true);
+    expect(result.passthrough).toEqual(["node", "server.js"]);
+  });
+});
+
+describe("resolveCommand", () => {
+  it("resolves ad-hoc command from passthrough", () => {
+    const result = resolveCommand(["node", "server.js"], null);
+    expect(result).toEqual({ command: "node", args: ["server.js"] });
+  });
+
+  it("resolves named command from config", () => {
+    const result = resolveCommand(["dev"], { commands: { dev: "node server.js --watch" } });
+    expect(result).toEqual({ command: "node", args: ["server.js", "--watch"] });
+  });
+
+  it("resolves explicit run subcommand", () => {
+    const result = resolveCommand(["run", "python", "app.py"], null);
+    expect(result).toEqual({ command: "python", args: ["app.py"] });
+  });
+
+  it("throws when no command specified", () => {
+    expect(() => resolveCommand([], null)).toThrow(/No command specified/i);
+  });
+
+  it("throws when named command is unknown and config has commands", () => {
+    expect(() => resolveCommand(["unknown"], { commands: { dev: "node server.js" } })).toThrow(/Unknown command/i);
+  });
+
+  it("throws when named command string is empty", () => {
+    expect(() => resolveCommand(["dev"], { commands: { dev: "" } })).toThrow(/is empty/i);
+  });
 });
 
 describe("run", () => {
