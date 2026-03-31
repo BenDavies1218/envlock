@@ -4,7 +4,12 @@ import { pathToFileURL } from "node:url";
 import type { EnvlockOptions } from "envlock-core";
 import { validateOnePasswordEnvId, log } from "envlock-core";
 
-const CONFIG_CANDIDATES = ["next.config.ts", "next.config.js", "next.config.mjs"];
+const CONFIG_CANDIDATES = [
+  "next.config.ts",
+  "next.config.js",
+  "next.config.mjs",
+  "next.config.cjs",
+];
 
 export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
   for (const candidate of CONFIG_CANDIDATES) {
@@ -23,10 +28,29 @@ export async function resolveConfig(cwd: string): Promise<EnvlockOptions> {
         typeof config.__envlock === "object" &&
         "onePasswordEnvId" in config.__envlock
       ) {
+        const envlock = config.__envlock as Record<string, unknown>;
+
+        if (typeof envlock["onePasswordEnvId"] !== "string") {
+          throw new Error(
+            `[envlock] ${candidate}: invalid config — __envlock.onePasswordEnvId must be a string.`,
+          );
+        }
+
+        if (
+          "envFiles" in envlock &&
+          (typeof envlock["envFiles"] !== "object" || envlock["envFiles"] === null)
+        ) {
+          throw new Error(
+            `[envlock] ${candidate}: invalid config — __envlock.envFiles must be an object if provided.`,
+          );
+        }
+
         log.debug(`Config loaded from ${candidate}`);
-        return config.__envlock as EnvlockOptions;
+        return envlock as unknown as EnvlockOptions;
       }
     } catch (err) {
+      // Re-throw our own validation errors; warn and continue for load errors
+      if (err instanceof Error && err.message.startsWith("[envlock]")) throw err;
       log.warn(`Failed to load ${candidate}: ${err instanceof Error ? err.message : String(err)}`);
       log.debug(`Stack: ${err instanceof Error ? (err.stack ?? "") : ""}`);
     }

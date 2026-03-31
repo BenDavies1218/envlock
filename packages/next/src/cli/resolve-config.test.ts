@@ -110,4 +110,29 @@ describe("resolveConfig", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("next.config.js"));
     warn.mockRestore();
   });
+
+  it("throws when __envlock.onePasswordEnvId is not a string", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.js"),
+      `export default { __envlock: { onePasswordEnvId: 99 } };`,
+    );
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+
+  it("throws when __envlock.envFiles is not an object", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.js"),
+      `export default { __envlock: { onePasswordEnvId: "my-id", envFiles: "bad" } };`,
+    );
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+
+  it("loads config from next.config.cjs", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.cjs"),
+      `module.exports = { __envlock: { onePasswordEnvId: "cjs-id" } };`,
+    );
+    const result = await resolveConfig(tmpDir);
+    expect(result.onePasswordEnvId).toBe("cjs-id");
+  });
 });
