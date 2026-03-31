@@ -20,3 +20,14 @@ export interface EnvlockConfig {
   envFiles?: Partial<Record<Environment, string>>;
   commands?: Record<string, string>;
 }
+
+export const ARGUMENT_FLAGS = {
+  staging: "--staging",
+  production: "--production",
+} as const;
+
+export const DEFAULT_ENV_FILES: Record<Environment, string> = {
+  development: ".env.development",
+  staging: ".env.staging",
+  production: ".env.production",
+};
