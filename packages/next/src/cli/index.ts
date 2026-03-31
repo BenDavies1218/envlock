@@ -1,11 +1,19 @@
 import { pathToFileURL } from "node:url";
 import { realpathSync } from "node:fs";
 import { Command } from "commander";
-import { ENVIRONMENTS, runWithSecrets, validateEnvFilePath, validateOnePasswordEnvId } from "envlock-core";
+import {
+  ENVIRONMENTS,
+  ARGUMENT_FLAGS,
+  DEFAULT_ENV_FILES,
+  runWithSecrets,
+  validateEnvFilePath,
+  validateOnePasswordEnvId,
+  log,
+  setVerbose,
+  findFreePort,
+} from "envlock-core";
 import type { Environment } from "envlock-core";
-import { log, setVerbose } from "envlock-core";
 import { resolveConfig } from "./resolve-config.js";
-import { findFreePort } from "envlock-core";
 
 const SUPPORTED_SUBCOMMANDS = {
   dev: "development",
@@ -21,50 +29,49 @@ const SUBCOMMAND_DESCRIPTIONS: Record<Subcommand, string> = {
   start: "Start Next.js production server",
 };
 
-const DEFAULT_ENV_FILES: Record<Environment, string> = {
-  development: ".env.development",
-  staging: ".env.staging",
-  production: ".env.production",
-};
+/** Pure function — replaces or inserts the port flag in a Next.js args array. */
+export function updatePortArg(args: string[], newPort: number): string[] {
+  const portFlagIndex = args.findIndex((a) => a === "--port" || a === "-p");
+  const withoutPort =
+    portFlagIndex !== -1 ? args.filter((_, i) => i !== portFlagIndex && i !== portFlagIndex + 1) : args;
+  return ["-p", String(newPort), ...withoutPort];
+}
 
-const ARGUMENT_FLAGS = {
-  staging: "--staging",
-  production: "--production",
-} as const;
+async function resolveAndValidateConfig(
+  environment: Environment,
+  cwd: string,
+): Promise<{ onePasswordEnvId: string; envFile: string }> {
+  const config = await resolveConfig(cwd);
+  const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config.onePasswordEnvId;
+  if (!onePasswordEnvId) {
+    throw new Error(
+      "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
+    );
+  }
+  validateOnePasswordEnvId(onePasswordEnvId);
+  const envFile = config.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
+  validateEnvFilePath(envFile, cwd);
+  return { onePasswordEnvId, envFile };
+}
 
 export async function runNextCommand(
   subcommand: Subcommand,
   environment: Environment,
   passthroughArgs: string[],
 ): Promise<void> {
-  const config = await resolveConfig(process.cwd());
-  const envFile =
-    config.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
-
-  validateEnvFilePath(envFile, process.cwd());
+  const { onePasswordEnvId, envFile } = await resolveAndValidateConfig(environment, process.cwd());
 
   let finalArgs = [...passthroughArgs];
 
-  // Port switching — dev only
   if (subcommand === "dev") {
-    const portFlagIndex = finalArgs.findIndex(
-      (a) => a === "--port" || a === "-p",
-    );
+    const portFlagIndex = finalArgs.findIndex((a) => a === "--port" || a === "-p");
     const requestedPort =
-      portFlagIndex !== -1
-        ? parseInt(finalArgs[portFlagIndex + 1] ?? "3000", 10)
-        : 3000;
-
+      portFlagIndex !== -1 ? parseInt(finalArgs[portFlagIndex + 1] ?? "3000", 10) : 3000;
     const freePort = await findFreePort(requestedPort);
-
     if (freePort !== requestedPort) {
       log.warn(`Port ${requestedPort} in use, switching to ${freePort}`);
     }
-
-    if (portFlagIndex !== -1) {
-      finalArgs.splice(portFlagIndex, 2);
-    }
-    finalArgs = ["-p", String(freePort), ...finalArgs];
+    finalArgs = updatePortArg(finalArgs, freePort);
   }
 
   log.debug(`Environment: ${environment}`);
@@ -74,7 +81,7 @@ export async function runNextCommand(
   await runWithSecrets({
     envFile,
     environment,
-    onePasswordEnvId: config.onePasswordEnvId,
+    onePasswordEnvId,
     command: "next",
     args: [subcommand, ...finalArgs],
   });
@@ -108,26 +115,13 @@ export async function handleRunCommand(
     );
   }
   const environment = getEnvironment(opts, ENVIRONMENTS.development);
-  const config = await resolveConfig(process.cwd());
-  const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config.onePasswordEnvId;
-  if (!onePasswordEnvId) {
-    throw new Error(
-      "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
-    );
-  }
-  validateOnePasswordEnvId(onePasswordEnvId);
-  const envFile = config.envFiles?.[environment] ?? DEFAULT_ENV_FILES[environment];
-  validateEnvFilePath(envFile, process.cwd());
+  const { onePasswordEnvId, envFile } = await resolveAndValidateConfig(environment, process.cwd());
+
   log.debug(`Environment: ${environment}`);
   log.debug(`Env file: ${envFile}`);
   log.debug(`Command: ${cmd} ${cmdArgs.join(" ")}`);
-  await runWithSecrets({
-    envFile,
-    environment,
-    onePasswordEnvId,
-    command: cmd,
-    args: cmdArgs,
-  });
+
+  await runWithSecrets({ envFile, environment, onePasswordEnvId, command: cmd, args: cmdArgs });
 }
 
 const program = new Command("envlock");
@@ -180,7 +174,6 @@ const _resolvedArgv1Next = (() => {
 })();
 
 if (import.meta.url === pathToFileURL(_resolvedArgv1Next).href) {
-  // Enable debug before parse so log.debug works during subcommand dispatch
   if (process.argv.includes("--debug") || process.argv.includes("-d")) {
     setVerbose(true);
   }

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("envlock-core", () => ({
   ENVIRONMENTS: { development: "development", staging: "staging", production: "production" },
+  ARGUMENT_FLAGS: { staging: "--staging", production: "--production" },
+  DEFAULT_ENV_FILES: { development: ".env.development", staging: ".env.staging", production: ".env.production" },
   runWithSecrets: vi.fn(),
   validateEnvFilePath: vi.fn(),
   validateOnePasswordEnvId: vi.fn(),
@@ -16,7 +18,7 @@ vi.mock("./resolve-config.js", () => ({
 
 const { runWithSecrets, validateOnePasswordEnvId, findFreePort, log } = await import("envlock-core");
 const { resolveConfig } = await import("./resolve-config.js");
-const { handleRunCommand, runNextCommand } = await import("./index.js");
+const { handleRunCommand, runNextCommand, updatePortArg } = await import("./index.js");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -27,6 +29,28 @@ beforeEach(() => {
 
 afterEach(() => {
   delete process.env["ENVLOCK_OP_ENV_ID"];
+});
+
+describe("updatePortArg", () => {
+  it("prepends -p <port> when no port flag present", () => {
+    const result = updatePortArg(["--turbo"], 3001);
+    expect(result).toEqual(["-p", "3001", "--turbo"]);
+  });
+
+  it("replaces existing --port <n> with -p <newPort>", () => {
+    const result = updatePortArg(["--port", "3000", "--turbo"], 3001);
+    expect(result).toEqual(["-p", "3001", "--turbo"]);
+  });
+
+  it("replaces existing -p <n> with -p <newPort>", () => {
+    const result = updatePortArg(["-p", "3000", "--turbo"], 3001);
+    expect(result).toEqual(["-p", "3001", "--turbo"]);
+  });
+
+  it("returns [-p, port] for empty args", () => {
+    const result = updatePortArg([], 3000);
+    expect(result).toEqual(["-p", "3000"]);
+  });
 });
 
 describe("handleRunCommand", () => {
