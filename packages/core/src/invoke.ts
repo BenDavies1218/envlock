@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnSync, spawn } from "node:child_process";
 import { checkBinary } from "./detect.js";
 import { log } from "./logger.js";
 import { spinner } from "./spinner.js";
@@ -32,26 +32,24 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       spinner.stop();
       throw err;
     }
-    // Spinner first frame stays visible while spawnSync blocks (event loop is frozen).
-    const result = spawnSync(
-      "op",
-      [
-        "run",
-        "--environment",
-        onePasswordEnvId,
-        "--",
-        process.execPath,
-        ...process.execArgv,
-        process.argv[1]!,
-        ...process.argv.slice(2),
-      ],
-      { stdio: "inherit" },
-    );
+    // Use async spawn so the event loop stays free and the spinner can animate.
+    const opArgs = [
+      "run",
+      "--environment",
+      onePasswordEnvId,
+      "--",
+      process.execPath,
+      ...process.execArgv,
+      process.argv[1]!,
+      ...process.argv.slice(2),
+    ];
+    const exitCode = await new Promise<number>((resolve, reject) => {
+      const child = spawn("op", opArgs, { stdio: "inherit" });
+      child.on("error", (err: Error) => reject(new Error(`[envlock] Failed to spawn 'op': ${err.message}`)));
+      child.on("close", (code) => resolve(code ?? 1));
+    });
     spinner.stop();
-    if (result.error) {
-      throw new Error(`[envlock] Failed to spawn 'op': ${result.error.message}`);
-    }
-    process.exit(result.status ?? 1);
+    process.exit(exitCode);
   }
 
   // Private key is in process.env — use dotenvx JS API to decrypt the env file.

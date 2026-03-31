@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 vi.mock("node:child_process", () => ({
   spawnSync: vi.fn(),
+  spawn: vi.fn(),
 }));
 
 vi.mock("../detect.js", () => ({
@@ -17,7 +18,7 @@ vi.mock("@dotenvx/dotenvx", () => ({
   config: vi.fn(),
 }));
 
-const { spawnSync } = await import("node:child_process");
+const { spawnSync, spawn } = await import("node:child_process");
 const { config: dotenvxConfig } = await import("@dotenvx/dotenvx");
 const { runWithSecrets } = await import("../invoke.js");
 
@@ -36,25 +37,33 @@ describe("runWithSecrets", () => {
   });
 
   describe("when key is not yet injected", () => {
+    function mockSpawn(closeCode: number | null, error?: Error) {
+      vi.mocked(spawn).mockReturnValue({
+        on: vi.fn().mockImplementation((event: string, cb: (arg?: unknown) => void) => {
+          if (error && event === "error") cb(error);
+          else if (!error && event === "close") cb(closeCode);
+        }),
+      } as any);
+    }
+
     it("re-invokes via op run and exits with its status", async () => {
+      mockSpawn(0);
       vi.mocked(spawnSync).mockReturnValue({ status: 0, error: undefined } as any);
       const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
       await runWithSecrets(BASE_OPTS);
-      expect(vi.mocked(spawnSync).mock.calls[0]![0]).toBe("op");
+      expect(vi.mocked(spawn).mock.calls[0]![0]).toBe("op");
       expect(exitSpy).toHaveBeenCalledWith(0);
       exitSpy.mockRestore();
     });
 
     it("throws when op fails to spawn", async () => {
-      vi.mocked(spawnSync).mockReturnValue({
-        status: null,
-        error: new Error("ENOENT: op not found"),
-      } as any);
+      mockSpawn(null, new Error("ENOENT: op not found"));
       await expect(runWithSecrets(BASE_OPTS)).rejects.toThrow(/Failed to spawn.*op/i);
     });
 
     it("exits with 1 when op status is null and no error", async () => {
-      vi.mocked(spawnSync).mockReturnValue({ status: null, error: undefined } as any);
+      mockSpawn(null);
+      vi.mocked(spawnSync).mockReturnValue({ status: 0, error: undefined } as any);
       const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
       await runWithSecrets(BASE_OPTS);
       expect(exitSpy).toHaveBeenCalledWith(1);
