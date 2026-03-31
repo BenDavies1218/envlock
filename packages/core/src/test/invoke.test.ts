@@ -38,9 +38,7 @@ describe("runWithSecrets", () => {
 
   describe("when key is not yet injected", () => {
     function mockSpawn(closeCode: number | null, error?: Error) {
-      const stderrMock = { on: vi.fn() };
       vi.mocked(spawn).mockReturnValue({
-        stderr: stderrMock,
         on: vi.fn().mockImplementation((event: string, cb: (arg?: unknown) => void) => {
           if (error && event === "error") cb(error);
           else if (!error && event === "close") cb(closeCode);
