@@ -2,46 +2,32 @@ import { describe, expect, it, vi } from "vitest";
 import { withEnvlock } from "../plugin.js";
 
 describe("withEnvlock", () => {
-  it("attaches __envlock to the Next.js config", () => {
-    const result = withEnvlock({}, { onePasswordEnvId: "abc123" });
-    expect(result.__envlock.onePasswordEnvId).toBe("abc123");
+  it("returns the next config unchanged when no options provided", () => {
+    const result = withEnvlock({ reactStrictMode: true });
+    expect(result.reactStrictMode).toBe(true);
   });
 
-  it("merges with existing Next.js config without overwriting it", () => {
+  it("returns the next config unchanged when valid options provided", () => {
     const result = withEnvlock(
       { reactStrictMode: true },
-      { onePasswordEnvId: "abc123" },
+      { onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" },
     );
     expect(result.reactStrictMode).toBe(true);
-    expect(result.__envlock.onePasswordEnvId).toBe("abc123");
   });
 
-  it("preserves custom envFiles in __envlock", () => {
-    const result = withEnvlock(
-      {},
-      {
-        onePasswordEnvId: "abc123",
-        envFiles: { staging: ".env.custom-staging" },
-      },
-    );
-    expect(result.__envlock.envFiles?.staging).toBe(".env.custom-staging");
+  it("does not attach __envlock to the returned config", () => {
+    const result = withEnvlock({}, { onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" });
+    expect("__envlock" in result).toBe(false);
   });
 
-  it("warns when onePasswordEnvId is not provided", () => {
+  it("does not warn when onePasswordEnvId is not provided", () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     withEnvlock({});
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
+    expect(stderrSpy).not.toHaveBeenCalled();
     stderrSpy.mockRestore();
   });
 
-  it("warns when onePasswordEnvId is an empty string", () => {
-    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    withEnvlock({}, { onePasswordEnvId: "" });
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
-    stderrSpy.mockRestore();
-  });
-
-  it("does not warn when onePasswordEnvId is valid", () => {
+  it("does not warn when valid onePasswordEnvId is provided", () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     withEnvlock({}, { onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" });
     expect(stderrSpy).not.toHaveBeenCalled();
@@ -58,15 +44,5 @@ describe("withEnvlock", () => {
     expect(() =>
       withEnvlock({}, { onePasswordEnvId: "abc; rm -rf /" }),
     ).toThrow(/invalid/i);
-  });
-
-  it("warns via log.warn (not console.warn) when onePasswordEnvId is missing", () => {
-    const consoleSpy = vi.spyOn(console, "warn");
-    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    withEnvlock({});
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("No onePasswordEnvId"));
-    expect(consoleSpy).not.toHaveBeenCalled();
-    stderrSpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 });

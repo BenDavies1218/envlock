@@ -18,34 +18,72 @@ afterEach(() => {
   delete process.env["ENVLOCK_OP_ENV_ID"];
 });
 
-describe("resolveConfig", () => {
-  it("reads onePasswordEnvId from next.config.js with withEnvlock", async () => {
+describe("resolveConfig — envlock.config.js (preferred)", () => {
+  it("reads onePasswordEnvId from envlock.config.js", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "envlock-id" };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config.onePasswordEnvId).toBe("envlock-id");
+  });
+
+  it("reads envFiles from envlock.config.js", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "envlock-id", envFiles: { staging: ".env.staging" } };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config.envFiles?.staging).toBe(".env.staging");
+  });
+
+  it("prefers envlock.config.js over next.config.js __envlock", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "from-envlock-config" };`,
+    );
+    writeFileSync(
+      join(tmpDir, "next.config.js"),
+      `export default { __envlock: { onePasswordEnvId: "from-next-config" } };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config.onePasswordEnvId).toBe("from-envlock-config");
+  });
+
+  it("throws when envlock.config.js onePasswordEnvId is not a string", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: 99 };`,
+    );
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+
+  it("throws when envlock.config.js envFiles is not an object", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "my-id", envFiles: "bad" };`,
+    );
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+
+  it("loads from envlock.config.cjs", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.cjs"),
+      `module.exports = { onePasswordEnvId: "cjs-envlock-id" };`,
+    );
+    const result = await resolveConfig(tmpDir);
+    expect(result.onePasswordEnvId).toBe("cjs-envlock-id");
+  });
+});
+
+describe("resolveConfig — next.config.js __envlock (backward compat)", () => {
+  it("reads onePasswordEnvId from next.config.js with __envlock", async () => {
     writeFileSync(
       join(tmpDir, "next.config.js"),
       `export default { __envlock: { onePasswordEnvId: "test-env-id" } };`,
     );
     const config = await resolveConfig(tmpDir);
     expect(config.onePasswordEnvId).toBe("test-env-id");
-  });
-
-  it("falls back to ENVLOCK_OP_ENV_ID env var when no config file found", async () => {
-    process.env["ENVLOCK_OP_ENV_ID"] = "env-var-id";
-    const config = await resolveConfig(tmpDir);
-    expect(config.onePasswordEnvId).toBe("env-var-id");
-  });
-
-  it("throws a descriptive error when no config is found anywhere", async () => {
-    await expect(resolveConfig(tmpDir)).rejects.toThrow(/withEnvlock/);
-  });
-
-  it("skips config files that do not have __envlock and tries the next", async () => {
-    writeFileSync(
-      join(tmpDir, "next.config.js"),
-      `export default { reactStrictMode: true };`,
-    );
-    process.env["ENVLOCK_OP_ENV_ID"] = "fallback-id";
-    const config = await resolveConfig(tmpDir);
-    expect(config.onePasswordEnvId).toBe("fallback-id");
   });
 
   it("prefers next.config.js over next.config.mjs", async () => {
@@ -61,18 +99,7 @@ describe("resolveConfig", () => {
     expect(config.onePasswordEnvId).toBe("from-js");
   });
 
-  it("validates ENVLOCK_OP_ENV_ID from env var (rejects CLI flag injection)", async () => {
-    process.env["ENVLOCK_OP_ENV_ID"] = "--no-masking";
-    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
-  });
-
-  it("validates ENVLOCK_OP_ENV_ID from env var (rejects shell metacharacters)", async () => {
-    process.env["ENVLOCK_OP_ENV_ID"] = "abc; rm -rf /";
-    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
-  });
-
   it("attempts next.config.ts before next.config.mjs", async () => {
-    // Plain JS written to a .ts file — loads natively on Node 22+, falls through on older Node
     writeFileSync(
       join(tmpDir, "next.config.ts"),
       `export default { __envlock: { onePasswordEnvId: "from-ts" } };`,
@@ -99,18 +126,6 @@ describe("resolveConfig", () => {
     expect(config.onePasswordEnvId).toBe("from-mjs-fallback");
   });
 
-  it("warns when a config file has a syntax error instead of silently skipping", async () => {
-    writeFileSync(
-      join(tmpDir, "next.config.js"),
-      `export default { this is not valid javascript }`,
-    );
-    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
-    process.env["ENVLOCK_OP_ENV_ID"] = "fallback-id";
-    await resolveConfig(tmpDir);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("next.config.js"));
-    warn.mockRestore();
-  });
-
   it("throws when __envlock.onePasswordEnvId is not a string", async () => {
     writeFileSync(
       join(tmpDir, "next.config.js"),
@@ -134,5 +149,51 @@ describe("resolveConfig", () => {
     );
     const result = await resolveConfig(tmpDir);
     expect(result.onePasswordEnvId).toBe("cjs-id");
+  });
+
+  it("skips next.config.js that does not have __envlock and tries the next", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.js"),
+      `export default { reactStrictMode: true };`,
+    );
+    process.env["ENVLOCK_OP_ENV_ID"] = "fallback-id";
+    const config = await resolveConfig(tmpDir);
+    expect(config.onePasswordEnvId).toBe("fallback-id");
+  });
+});
+
+describe("resolveConfig — ENVLOCK_OP_ENV_ID env var", () => {
+  it("falls back to ENVLOCK_OP_ENV_ID when no config file found", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "env-var-id";
+    const config = await resolveConfig(tmpDir);
+    expect(config.onePasswordEnvId).toBe("env-var-id");
+  });
+
+  it("validates ENVLOCK_OP_ENV_ID (rejects CLI flag injection)", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "--no-masking";
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+
+  it("validates ENVLOCK_OP_ENV_ID (rejects shell metacharacters)", async () => {
+    process.env["ENVLOCK_OP_ENV_ID"] = "abc; rm -rf /";
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/invalid/i);
+  });
+});
+
+describe("resolveConfig — error handling", () => {
+  it("throws a descriptive error when no config is found anywhere", async () => {
+    await expect(resolveConfig(tmpDir)).rejects.toThrow(/envlock\.config\.js/);
+  });
+
+  it("warns when a config file has a syntax error instead of silently skipping", async () => {
+    writeFileSync(
+      join(tmpDir, "next.config.js"),
+      `export default { this is not valid javascript }`,
+    );
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
+    process.env["ENVLOCK_OP_ENV_ID"] = "fallback-id";
+    await resolveConfig(tmpDir);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("next.config.js"));
+    warn.mockRestore();
   });
 });

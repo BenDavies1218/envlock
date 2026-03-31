@@ -2,3 +2,8 @@ node_modules
 dist
 *.local
 .worktrees
+
+apps/test-node/node_modules
+apps/test-next/node_modules
+apps/test-next/.next/**
+apps/test-next/dist

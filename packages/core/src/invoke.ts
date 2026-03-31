@@ -1,7 +1,6 @@
 import { spawnSync, spawn } from "node:child_process";
 import { checkBinary } from "./detect.js";
 import { log } from "./logger.js";
-import { spinner } from "./spinner.js";
 import type { Environment } from "./types.js";
 
 export interface RunWithSecretsOptions {
@@ -21,17 +20,11 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
   if (!keyAlreadyInjected) {
     // Re-invoke this process inside `op run` so the private key lands in process.env.
     // op run exec's into the child, so spawnSync blocks until the inner process exits.
-    spinner.start("Fetching secrets from 1Password…");
-    try {
-      checkBinary(
-        "op",
-        "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
-      );
-      log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
-    } catch (err) {
-      spinner.stop();
-      throw err;
-    }
+    checkBinary(
+      "op",
+      "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
+    );
+    log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
     const opArgs = [
       "run",
       "--environment",
@@ -42,7 +35,6 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       process.argv[1]!,
       ...process.argv.slice(2),
     ];
-    spinner.stop(); // clear before child inherits stderr
     const exitCode = await new Promise<number>((resolve, reject) => {
       const child = spawn("op", opArgs, { stdio: "inherit" });
       child.on("error", (err: Error) => reject(new Error(`[envlock] Failed to spawn 'op': ${err.message}`)));
@@ -53,13 +45,8 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
 
   // Private key is in process.env — use dotenvx JS API to decrypt the env file.
   log.debug(`Decrypting ${envFile} via dotenvx`);
-  spinner.start("Decrypting .env file…");
-  try {
-    const { config } = await import("@dotenvx/dotenvx");
-    config({ path: envFile });
-  } finally {
-    spinner.stop();
-  }
+  const { config } = await import("@dotenvx/dotenvx");
+  config({ path: envFile });
 
   // Run the command as a direct child — spawnSync blocks correctly.
   log.debug(`Spawning: ${command} ${args.join(" ")}`);

@@ -1,0 +1,13 @@
+{
+  "name": "test-node",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx envlock start",
+    "build": "npx envlock build"
+  },
+  "dependencies": {
+    "envlock-core": "workspace:*"
+  }
+}

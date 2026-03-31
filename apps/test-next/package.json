@@ -1,0 +1,25 @@
+{
+  "name": "test-next",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "envlock dev",
+    "build": "envlock build",
+    "start": "envlock start",
+    "dev:staging": "envlock dev --staging",
+    "build:staging": "envlock build --staging"
+  },
+  "dependencies": {
+    "envlock-next": "workspace:*",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.0.0"
+  }
+}
