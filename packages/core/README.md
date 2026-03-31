@@ -2,7 +2,7 @@
 
 Framework-agnostic 1Password + dotenvx secret injection logic.
 
-> Most users should install [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead. This package is for integrating envlock with frameworks other than Next.js.
+> If you are using NextJs should install [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead. This package is for integrating envlock with frameworks other than Next.js.
 
 ## Prerequisites
 
@@ -25,41 +25,64 @@ Create `envlock.config.js` in your project root:
 ```js
 // envlock.config.js
 export default {
-  onePasswordEnvId: 'ca6uypwvab5mevel44gqdc2zae',
-  envFiles: {
+  onePasswordEnvId: '',
+  envFiles?: { // Optional just incase you want to specify an overide usefull for monorepo's
     development: '.env.development',
     staging: '.env.staging',
     production: '.env.production',
   },
   commands: {
-    dev:   'node server.js --watch',
-    start: 'node server.js --port 3000',
-    build: 'node build.js',
+    start: 'npx envlock-core start',
+    build: 'node '
   },
 };
 ```
+
+### Using Package.json
 
 Then wire up your `package.json` scripts:
 
 ```json
 {
   "scripts": {
-    "dev":   "envlock dev",
-    "build": "envlock build --production",
-    "start": "envlock start --production"
+    "start": "npx envlock-core start",
+    "build": "npx envlock-core build"
   }
 }
 ```
 
-> **Note:** `run` is a reserved subcommand name. If you define a command named `"run"` in `envlock.config.js`, it will be ignored with a warning. Rename it to something else (e.g. `migrate`) to use it as a named command.
-
-Pass `--staging` or `--production` to switch environments. For ad-hoc commands, pass the command directly without a config key:
+Then run:
 
 ```bash
-envlock node server.js --production
+npm run start                  # uses .env.development (default)
+npm run start -- --staging     # uses .env.staging
+npm run start -- --production  # uses .env.production
+npm run build
 ```
 
-Set `ENVLOCK_OP_ENV_ID` to provide the 1Password Environment ID via env var instead of the config file. In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly and `op run` is skipped automatically.
+### Not using package.json
+
+This command below can be run using the following
+
+```bash
+npx envlock-core dev                # uses .env.development (default)
+npx envlock-core dev --staging      # uses .env.staging
+npx envlock-core dev --production   # uses .env.production
+npx envlock-core start
+npx envlock-core build
+```
+
+```js
+// envlock.config.js
+export default {
+  onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae",
+  commands: {
+    dev: "node server.js --watch",
+    start: "node server.js --port 3000",
+    build: "node build.js",
+  },
+};
+```
 
 ## API
 
@@ -101,9 +124,9 @@ Enables or disables debug-level log output. When `true`, envlock logs the resolv
 
 ```ts
 const ENVIRONMENTS = {
-  development: 'development',
-  staging: 'staging',
-  production: 'production',
+  development: "development",
+  staging: "staging",
+  production: "production",
 } as const;
 
 type Environment = keyof typeof ENVIRONMENTS;
@@ -127,10 +150,6 @@ interface RunWithSecretsOptions {
   args: string[];
 }
 ```
-
-## Security model
-
-envlock uses a two-phase secret injection model — see [Security model](../../README.md#security-model) in the root README for a full explanation.
 
 ## License
 
