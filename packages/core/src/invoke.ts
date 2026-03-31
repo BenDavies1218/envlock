@@ -33,6 +33,8 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       throw err;
     }
     // Use async spawn so the event loop stays free and the spinner can animate.
+    // Pipe stderr so we can detect the first output from the child and stop the
+    // spinner before it appears — stdout stays inherited to preserve TTY/colours.
     const opArgs = [
       "run",
       "--environment",
@@ -44,11 +46,18 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       ...process.argv.slice(2),
     ];
     const exitCode = await new Promise<number>((resolve, reject) => {
-      const child = spawn("op", opArgs, { stdio: "inherit" });
-      child.on("error", (err: Error) => reject(new Error(`[envlock] Failed to spawn 'op': ${err.message}`)));
-      child.on("close", (code) => resolve(code ?? 1));
+      const child = spawn("op", opArgs, { stdio: ["inherit", "inherit", "pipe"] });
+      let spinnerStopped = false;
+      const stopOnce = () => {
+        if (!spinnerStopped) { spinnerStopped = true; spinner.stop(); }
+      };
+      child.stderr!.on("data", (chunk: Buffer) => {
+        stopOnce();
+        process.stderr.write(chunk);
+      });
+      child.on("error", (err: Error) => { stopOnce(); reject(new Error(`[envlock] Failed to spawn 'op': ${err.message}`)); });
+      child.on("close", (code) => { stopOnce(); resolve(code ?? 1); });
     });
-    spinner.stop();
     process.exit(exitCode);
   }
 
