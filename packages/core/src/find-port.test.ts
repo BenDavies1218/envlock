@@ -51,4 +51,17 @@ describe("findFreePort", () => {
       await Promise.all(releases.map((r) => r()));
     }
   });
+
+  it("treats a hung listen as not-free after 2 seconds", async () => {
+    // Verify PORT_SEARCH_RANGE is reflected in the error message range.
+    const releases: Array<() => Promise<void>> = [];
+    for (let p = 19040; p <= 19050; p++) {
+      releases.push(await occupyPort(p));
+    }
+    try {
+      await expect(findFreePort(19040)).rejects.toThrow(/19040.{1,5}19050/);
+    } finally {
+      await Promise.all(releases.map((r) => r()));
+    }
+  }, 15_000);
 });
