@@ -28,24 +28,24 @@ describe("withEnvlock", () => {
   });
 
   it("warns when onePasswordEnvId is not provided", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     withEnvlock({});
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
-    warn.mockRestore();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
+    stderrSpy.mockRestore();
   });
 
   it("warns when onePasswordEnvId is an empty string", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     withEnvlock({}, { onePasswordEnvId: "" });
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
-    warn.mockRestore();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock]"));
+    stderrSpy.mockRestore();
   });
 
   it("does not warn when onePasswordEnvId is valid", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     withEnvlock({}, { onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" });
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
+    expect(stderrSpy).not.toHaveBeenCalled();
+    stderrSpy.mockRestore();
   });
 
   it("throws when onePasswordEnvId contains CLI flag characters", () => {
@@ -58,5 +58,15 @@ describe("withEnvlock", () => {
     expect(() =>
       withEnvlock({}, { onePasswordEnvId: "abc; rm -rf /" }),
     ).toThrow(/invalid/i);
+  });
+
+  it("warns via log.warn (not console.warn) when onePasswordEnvId is missing", () => {
+    const consoleSpy = vi.spyOn(console, "warn");
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    withEnvlock({});
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("No onePasswordEnvId"));
+    expect(consoleSpy).not.toHaveBeenCalled();
+    stderrSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 });
