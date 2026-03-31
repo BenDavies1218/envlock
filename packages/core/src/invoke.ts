@@ -22,12 +22,15 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
     // Re-invoke this process inside `op run` so the private key lands in process.env.
     // op run exec's into the child, so spawnSync blocks until the inner process exits.
     spinner.start("Fetching secrets from 1Password…");
-    checkBinary(
-      "op",
-      "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
-    );
-    log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
-    spinner.stop();
+    try {
+      checkBinary(
+        "op",
+        "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
+      );
+      log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
+    } finally {
+      spinner.stop(); // clear before spawnSync with stdio: "inherit", and on any throw
+    }
     const result = spawnSync(
       "op",
       [
