@@ -12,13 +12,13 @@ vi.mock("envlock-core", () => ({
   findFreePort: vi.fn(),
 }));
 
-vi.mock("./resolve-config.js", () => ({
+vi.mock("../../cli/resolve-config.js", () => ({
   resolveConfig: vi.fn(),
 }));
 
 const { runWithSecrets, validateOnePasswordEnvId, findFreePort, log } = await import("envlock-core");
-const { resolveConfig } = await import("./resolve-config.js");
-const { handleRunCommand, runNextCommand, updatePortArg } = await import("./index.js");
+const { resolveConfig } = await import("../../cli/resolve-config.js");
+const { handleRunCommand, runNextCommand, updatePortArg } = await import("../../cli/index.js");
 
 beforeEach(() => {
   vi.clearAllMocks();

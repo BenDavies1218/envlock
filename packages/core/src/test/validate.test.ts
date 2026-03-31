@@ -1,6 +1,6 @@
 import { sep } from "node:path";
 import { describe, expect, it } from "vitest";
-import { validateEnvFilePath, validateOnePasswordEnvId } from "./validate.js";
+import { validateEnvFilePath, validateOnePasswordEnvId } from "../validate.js";
 
 describe("validateOnePasswordEnvId", () => {
   it("accepts valid 1Password environment IDs (lowercase alphanumeric)", () => {

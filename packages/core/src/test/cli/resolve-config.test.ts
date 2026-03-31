@@ -2,8 +2,8 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { log } from "../logger.js";
-import { resolveConfig } from "./resolve-config.js";
+import { log } from "../../logger.js";
+import { resolveConfig } from "../../cli/resolve-config.js";
 
 let tmpDir: string;
 

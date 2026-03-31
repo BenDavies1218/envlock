@@ -1,6 +1,6 @@
 import { createServer } from "node:net";
 import { describe, expect, it } from "vitest";
-import { findFreePort } from "./find-port.js";
+import { findFreePort } from "../find-port.js";
 
 function occupyPort(port: number): Promise<() => Promise<void>> {
   return new Promise((resolve, reject) => {

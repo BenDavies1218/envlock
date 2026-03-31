@@ -4,11 +4,11 @@ vi.mock("node:child_process", () => ({
   spawnSync: vi.fn(),
 }));
 
-vi.mock("./detect.js", () => ({
+vi.mock("../detect.js", () => ({
   checkBinary: vi.fn(),
 }));
 
-vi.mock("./logger.js", () => ({
+vi.mock("../logger.js", () => ({
   log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   setVerbose: vi.fn(),
 }));
@@ -19,7 +19,7 @@ vi.mock("@dotenvx/dotenvx", () => ({
 
 const { spawnSync } = await import("node:child_process");
 const { config: dotenvxConfig } = await import("@dotenvx/dotenvx");
-const { runWithSecrets } = await import("./invoke.js");
+const { runWithSecrets } = await import("../invoke.js");
 
 const BASE_OPTS = {
   envFile: ".env.development",

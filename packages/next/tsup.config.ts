@@ -19,11 +19,4 @@ export default defineConfig([
       js: "#!/usr/bin/env node",
     },
   },
-  {
-    entry: { postinstall: "src/postinstall.ts" },
-    format: ["cjs"],
-    dts: false,
-    clean: false,
-    outDir: "dist",
-  },
 ]);

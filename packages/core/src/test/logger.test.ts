@@ -12,14 +12,14 @@ afterEach(() => {
 describe("log.debug", () => {
   it("does not write when verbose is false (default)", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log } = await import("./logger.js");
+    const { log } = await import("../logger.js");
     log.debug("hello");
     expect(stderrSpy).not.toHaveBeenCalled();
   });
 
   it("writes to stderr when verbose is true", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log, setVerbose } = await import("./logger.js");
+    const { log, setVerbose } = await import("../logger.js");
     setVerbose(true);
     log.debug("hello");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock:debug] hello\n"));
@@ -29,7 +29,7 @@ describe("log.debug", () => {
 describe("log.warn", () => {
   it("always writes to stderr", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log } = await import("./logger.js");
+    const { log } = await import("../logger.js");
     log.warn("something wrong");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock] Warning: something wrong\n"));
   });
@@ -38,7 +38,7 @@ describe("log.warn", () => {
 describe("log.error", () => {
   it("always writes to stderr", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log } = await import("./logger.js");
+    const { log } = await import("../logger.js");
     log.error("fatal");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock] Error: fatal\n"));
   });
@@ -47,7 +47,7 @@ describe("log.error", () => {
 describe("log.info", () => {
   it("always writes to stderr", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log } = await import("./logger.js");
+    const { log } = await import("../logger.js");
     log.info("running");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("[envlock] running\n"));
   });
@@ -56,7 +56,7 @@ describe("log.info", () => {
 describe("setVerbose", () => {
   it("can be toggled back off", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-    const { log, setVerbose } = await import("./logger.js");
+    const { log, setVerbose } = await import("../logger.js");
     setVerbose(true);
     setVerbose(false);
     log.debug("should not appear");

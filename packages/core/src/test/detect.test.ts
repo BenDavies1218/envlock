@@ -5,7 +5,7 @@ vi.mock("node:child_process", () => ({
 }));
 
 const { execFileSync } = await import("node:child_process");
-const { checkBinary, hasBinary } = await import("./detect.js");
+const { checkBinary, hasBinary } = await import("../detect.js");
 
 beforeEach(() => {
   vi.resetAllMocks();

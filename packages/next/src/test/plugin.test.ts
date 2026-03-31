@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { withEnvlock } from "./plugin.js";
+import { withEnvlock } from "../plugin.js";
 
 describe("withEnvlock", () => {
   it("attaches __envlock to the Next.js config", () => {

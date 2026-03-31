@@ -3,16 +3,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../invoke.js", () => ({
+vi.mock("../../invoke.js", () => ({
   runWithSecrets: vi.fn(),
 }));
-vi.mock("../validate.js", () => ({
+vi.mock("../../validate.js", () => ({
   validateEnvFilePath: vi.fn(),
   validateOnePasswordEnvId: vi.fn(),
 }));
 
-const { runWithSecrets } = await import("../invoke.js");
-const { run, parseArgs, resolveCommand } = await import("./index.js");
+const { runWithSecrets } = await import("../../invoke.js");
+const { run, parseArgs, resolveCommand } = await import("../../cli/index.js");
 
 let tmpDir: string;
 

@@ -35,8 +35,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "postinstall": "node -e \"const f='./dist/postinstall.cjs';require('fs').existsSync(f)&&require(f)\""
+    "test:watch": "vitest"
   },
   "dependencies": {
     "envlock-core": "^0.6.0",

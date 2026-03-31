@@ -103,14 +103,14 @@ Your 1Password Environment ID can be found in the 1Password dashboard under **De
 
 ```bash
 pnpm dev                    # uses .env.development (default)
-pnpm dev -- --staging       # uses .env.staging
-pnpm dev -- --production    # uses .env.production
+pnpm dev --staging       # uses .env.staging
+pnpm dev --production    # uses .env.production
 
-pnpm build                  # uses .env.development
-pnpm build -- --staging
-pnpm build -- --production
+pnpm build                  # uses .env.production (default)
+pnpm build --staging
+pnpm build --development
 
-pnpm start -- --production  # uses .env.production
+pnpm start --production  # uses .env.production (default)
 ```
 
 envlock injects secrets from 1Password and decrypts the appropriate `.env.*` file before starting Next.js. You'll see:
