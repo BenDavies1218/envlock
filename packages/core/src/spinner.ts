@@ -1,3 +1,5 @@
+import { log } from "./logger.js";
+
 const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const INTERVAL_MS = 80;
 
@@ -30,7 +32,6 @@ export const spinner = {
 
   fail(msg: string): void {
     this.stop();
-    if (!isTTY()) return;
-    process.stderr.write(`[envlock] Error: ${msg}\n`);
+    log.error(msg);
   },
 };
