@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { checkBinary } from "./detect.js";
 import { log } from "./logger.js";
+import { spinner } from "./spinner.js";
 import type { Environment } from "./types.js";
 
 export interface RunWithSecretsOptions {
@@ -25,6 +26,8 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
     );
     log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
+    spinner.start("Fetching secrets from 1Password…");
+    spinner.stop();
     const result = spawnSync(
       "op",
       [
@@ -48,8 +51,13 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
 
   // Private key is in process.env — use dotenvx JS API to decrypt the env file.
   log.debug(`Decrypting ${envFile} via dotenvx`);
-  const { config } = await import("@dotenvx/dotenvx");
-  config({ path: envFile });
+  spinner.start("Decrypting .env file…");
+  try {
+    const { config } = await import("@dotenvx/dotenvx");
+    config({ path: envFile });
+  } finally {
+    spinner.stop();
+  }
 
   // Run the command as a direct child — spawnSync blocks correctly.
   log.debug(`Spawning: ${command} ${args.join(" ")}`);
