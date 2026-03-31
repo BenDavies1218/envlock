@@ -89,11 +89,11 @@ describe("resolveConfig", () => {
       join(tmpDir, "envlock.config.js"),
       `export default { onePasswordEnvId: 42 };`,
     );
-    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
     const result = await resolveConfig(tmpDir);
     expect(result).toBeNull();
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
-    stderrSpy.mockRestore();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
+    warn.mockRestore();
   });
 
   it("returns null and warns when envFiles is not an object", async () => {
@@ -101,10 +101,10 @@ describe("resolveConfig", () => {
       join(tmpDir, "envlock.config.js"),
       `export default { onePasswordEnvId: "my-id", envFiles: "bad" };`,
     );
-    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
     const result = await resolveConfig(tmpDir);
     expect(result).toBeNull();
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
-    stderrSpy.mockRestore();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
+    warn.mockRestore();
   });
 });
