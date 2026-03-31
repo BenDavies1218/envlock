@@ -19,6 +19,13 @@ export async function resolveConfig(cwd: string): Promise<EnvlockConfig | null> 
       // Handle both ESM default exports and CJS module.exports = {}
       const config = (mod as Record<string, unknown>).default ?? mod;
       if (config && typeof config === "object") {
+        const c = config as Record<string, unknown>;
+        const idOk = !("onePasswordEnvId" in c) || typeof c["onePasswordEnvId"] === "string";
+        const filesOk = !("envFiles" in c) || (typeof c["envFiles"] === "object" && c["envFiles"] !== null);
+        if (!idOk || !filesOk) {
+          log.warn(`${candidate} has invalid shape — onePasswordEnvId must be a string, envFiles must be an object.`);
+          return null;
+        }
         log.debug(`Config loaded from ${candidate}`);
         return config as EnvlockConfig;
       }

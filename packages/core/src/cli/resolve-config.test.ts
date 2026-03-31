@@ -83,4 +83,28 @@ describe("resolveConfig", () => {
     expect(config).toBeNull();
     warn.mockRestore();
   });
+
+  it("returns null and warns when onePasswordEnvId is not a string", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: 42 };`,
+    );
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const result = await resolveConfig(tmpDir);
+    expect(result).toBeNull();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
+    stderrSpy.mockRestore();
+  });
+
+  it("returns null and warns when envFiles is not an object", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "my-id", envFiles: "bad" };`,
+    );
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const result = await resolveConfig(tmpDir);
+    expect(result).toBeNull();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("invalid shape"));
+    stderrSpy.mockRestore();
+  });
 });
