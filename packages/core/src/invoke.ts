@@ -28,9 +28,11 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
         "Install 1Password CLI: brew install --cask 1password-cli@beta\nThen sign in: op signin",
       );
       log.debug(`Re-invoking via: op run --environment ${onePasswordEnvId}`);
-    } finally {
-      spinner.stop(); // clear before spawnSync with stdio: "inherit", and on any throw
+    } catch (err) {
+      spinner.stop();
+      throw err;
     }
+    // Spinner first frame stays visible while spawnSync blocks (event loop is frozen).
     const result = spawnSync(
       "op",
       [
@@ -45,11 +47,11 @@ export async function runWithSecrets(options: RunWithSecretsOptions): Promise<vo
       ],
       { stdio: "inherit" },
     );
+    spinner.stop();
     if (result.error) {
       throw new Error(`[envlock] Failed to spawn 'op': ${result.error.message}`);
     }
     process.exit(result.status ?? 1);
-    return;
   }
 
   // Private key is in process.env — use dotenvx JS API to decrypt the env file.
