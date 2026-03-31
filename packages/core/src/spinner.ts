@@ -14,6 +14,8 @@ export const spinner = {
   start(msg: string): void {
     if (!isTTY()) return;
     frameIndex = 0;
+    process.stderr.write(`\r${FRAMES[0]!} ${msg}`);
+    frameIndex = 1;
     timer = setInterval(() => {
       const frame = FRAMES[frameIndex % FRAMES.length]!;
       process.stderr.write(`\r${frame} ${msg}`);
