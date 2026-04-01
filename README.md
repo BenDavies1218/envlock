@@ -37,7 +37,7 @@ In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly (e.g. a GitHub Actions secret). e
 npm install envlock-next
 ```
 
-On install, `envlock-next` automatically rewrites your `package.json` scripts:
+Update your `package.json` scripts to use the `envlock` CLI:
 
 ```json
 { "dev": "envlock dev", "build": "envlock build", "start": "envlock start" }
@@ -146,7 +146,7 @@ runWithSecrets({
 
 ## Contributing
 
-**Prerequisites:** Node 18+, pnpm 9+
+**Prerequisites:** Node 18+, pnpm 10+
 
 ```bash
 # Install dependencies

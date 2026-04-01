@@ -1,6 +1,6 @@
 {
   "name": "envlock-core",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "type": "module",
   "description": "Core 1Password + dotenvx secret injection logic for envlock",
   "license": "MIT",
