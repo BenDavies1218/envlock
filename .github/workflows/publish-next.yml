@@ -44,7 +44,7 @@ jobs:
 
       - name: Build
         working-directory: packages/next
-        run: pnpm build
+        run: pnpm exec tsup
 
       - name: Type check
         working-directory: packages/next
@@ -52,7 +52,7 @@ jobs:
 
       - name: Test
         working-directory: packages/next
-        run: pnpm test
+        run: pnpm exec vitest run
 
       - name: Publish
         working-directory: packages/next
