@@ -1,6 +1,6 @@
 {
   "name": "envlock-next",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "type": "module",
   "description": "Next.js plugin and CLI for envlock",
   "license": "MIT",
