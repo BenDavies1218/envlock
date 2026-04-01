@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "envlock start",
-    "build": "envlock build"
+    "start": "node node_modules/envlock-core/dist/cli/index.js start",
+    "build": "node node_modules/envlock-core/dist/cli/index.js build"
   },
   "dependencies": {
     "envlock-core": "workspace:*"
