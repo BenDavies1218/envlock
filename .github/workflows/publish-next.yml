@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core
+        working-directory: packages/core
+        run: pnpm exec tsup
+
       - name: Build
         working-directory: packages/next
         run: pnpm exec tsup
