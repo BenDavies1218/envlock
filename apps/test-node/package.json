@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npx envlock start",
-    "build": "npx envlock build"
+    "start": "envlock start",
+    "build": "envlock build"
   },
   "dependencies": {
     "envlock-core": "workspace:*"
