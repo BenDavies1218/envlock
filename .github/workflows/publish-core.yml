@@ -30,18 +30,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION="${GITHUB_REF_NAME#envlock-core@}"
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Set package version
-        working-directory: packages/core
-        env:
-          VERSION: ${{ steps.version.outputs.VERSION }}
-        run: pnpm version "$VERSION" --no-git-tag-version
-
       - name: Build
         working-directory: packages/core
         run: pnpm build
