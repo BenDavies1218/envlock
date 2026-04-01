@@ -1,155 +1,130 @@
 # envlock-core
 
-Framework-agnostic 1Password + dotenvx secret injection logic.
+[![npm](https://img.shields.io/npm/v/envlock-core)](https://www.npmjs.com/package/envlock-core)
+[![CI](https://github.com/BenDavies1218/envlock/actions/workflows/ci.yml/badge.svg)](https://github.com/BenDavies1218/envlock/actions/workflows/ci.yml)
 
-> If you are using NextJs should install [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead. This package is for integrating envlock with frameworks other than Next.js.
+Framework-agnostic CLI for injecting secrets from 1Password into your app at runtime using [dotenvx](https://dotenvx.com) encrypted env files.
+
+No secrets ever touch your shell history, CI environment variables, or unencrypted `.env` files.
+
+> For Next.js projects, use [`envlock-next`](https://www.npmjs.com/package/envlock-next) instead.
 
 ## Prerequisites
 
 - [1Password CLI](https://developer.1password.com/docs/cli/get-started/) (`op`) installed and signed in
-- [dotenvx](https://dotenvx.com/docs/install) installed (`npm install -g @dotenvx/dotenvx`)
 - Encrypted `.env.*` files committed to your repo (see [dotenvx quickstart](https://dotenvx.com/docs/quickstart))
 
-## Install
+## Installation
 
 ```bash
-pnpm add envlock-core
+npm install envlock-core
 ```
 
-## Usage
-
-### `envlock.config.js`
+## Setup
 
 Create `envlock.config.js` in your project root:
 
 ```js
-// envlock.config.js
 export default {
-  onePasswordEnvId: '',
-  envFiles?: { // Optional just incase you want to specify an overide usefull for monorepo's
-    development: '.env.development',
-    staging: '.env.staging',
-    production: '.env.production',
-  },
-  commands: {
-    start: 'npx envlock-core start',
-    build: 'node '
-  },
-};
-```
-
-### Using Package.json
-
-Then wire up your `package.json` scripts:
-
-```json
-{
-  "scripts": {
-    "start": "npx envlock-core start",
-    "build": "npx envlock-core build"
-  }
-}
-```
-
-Then run:
-
-```bash
-npm run start                  # uses .env.development (default)
-npm run start -- --staging     # uses .env.staging
-npm run start -- --production  # uses .env.production
-npm run build
-```
-
-### Not using package.json
-
-This command below can be run using the following
-
-```bash
-npx envlock-core dev                # uses .env.development (default)
-npx envlock-core dev --staging      # uses .env.staging
-npx envlock-core dev --production   # uses .env.production
-npx envlock-core start
-npx envlock-core build
-```
-
-```js
-// envlock.config.js
-export default {
-  onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae",
+  onePasswordEnvId: "your-1password-env-id",
   commands: {
     dev: "node server.js --watch",
-    start: "node server.js --port 3000",
+    start: "node server.js",
     build: "node build.js",
   },
 };
 ```
 
-## API
+Update your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "envlock dev",
+    "start": "envlock start",
+    "build": "envlock build"
+  }
+}
+```
+
+## CLI Usage
+
+```bash
+# Run a named command from envlock.config.js
+envlock dev
+envlock start --production
+
+# Run any command directly
+envlock run node server.js
+envlock run python app.py --port 4000
+```
+
+**Environment flags:**
+
+```bash
+envlock dev                 # uses .env.development (default)
+envlock start --staging     # uses .env.staging
+envlock start --production  # uses .env.production
+```
+
+**Debug output:**
+
+```bash
+envlock dev --debug
+```
+
+## How it works
+
+envlock injects secrets in two phases:
+
+1. **`op run` phase** — envlock re-invokes itself inside `op run --environment <id>`. The 1Password CLI injects `DOTENV_PRIVATE_KEY_<ENV>` into the child process environment.
+2. **`dotenvx` phase** — the re-invoked process detects the private key already set, calls the `dotenvx` JS API to decrypt the encrypted `.env.*` file, and spawns your command with secrets in its environment.
+
+In CI, set `DOTENV_PRIVATE_KEY_<ENV>` directly as a secret. envlock detects it and skips the `op run` phase entirely.
+
+## Programmatic API
+
+```ts
+import { runWithSecrets, findFreePort, log, setVerbose } from "envlock-core";
+
+// Run a command with secrets injected
+await runWithSecrets({
+  envFile: ".env.development",
+  environment: "development",
+  onePasswordEnvId: "your-env-id",
+  command: "node",
+  args: ["server.js"],
+});
+
+// Find a free port starting from preferred
+const port = await findFreePort(3000); // 3000, or 3001 if taken, etc.
+```
 
 ### `runWithSecrets(options)`
-
-Runs a command with secrets injected from 1Password via dotenvx. If `DOTENV_PRIVATE_KEY_<ENV>` is already set (e.g. in CI), it skips `op run` and calls `dotenvx run` directly.
-
-**Options:**
 
 | Option             | Type          | Description                                               |
 | ------------------ | ------------- | --------------------------------------------------------- |
 | `envFile`          | `string`      | Path to the encrypted dotenvx env file                    |
-| `environment`      | `Environment` | Environment name (`development`, `staging`, `production`) |
+| `environment`      | `Environment` | `"development"`, `"staging"`, or `"production"`           |
 | `onePasswordEnvId` | `string`      | Your 1Password Environment ID                             |
 | `command`          | `string`      | The command to run                                        |
 | `args`             | `string[]`    | Arguments to pass to the command                          |
 
 ### `validateOnePasswordEnvId(id)`
 
-Throws if `id` is not a valid 1Password Environment ID (lowercase alphanumeric + hyphens). Protects against CLI flag injection and shell metacharacters.
+Throws if `id` is not a valid 1Password Environment ID. Guards against CLI injection and shell metacharacters.
 
 ### `validateEnvFilePath(envFile, cwd)`
 
-Throws if `envFile` resolves outside `cwd`. Protects against path traversal.
+Throws if `envFile` resolves outside `cwd`. Guards against path traversal.
 
-### `hasBinary(name)`
+### `findFreePort(preferred)`
 
-Returns `true` if `name` is found in `PATH`.
+Returns `preferred` if available, otherwise the next free port above it.
 
-### `checkBinary(name, installHint)`
+### `setVerbose(enabled)`
 
-Calls `process.exit(1)` with a helpful message if `name` is not in `PATH`.
-
-### `setVerbose(verbose)`
-
-Enables or disables debug-level log output. When `true`, envlock logs the resolved config path, environment, env file, and spawned command to stderr. Called automatically when `--debug` / `-d` is passed on the CLI.
-
-## Types
-
-```ts
-const ENVIRONMENTS = {
-  development: "development",
-  staging: "staging",
-  production: "production",
-} as const;
-
-type Environment = keyof typeof ENVIRONMENTS;
-
-interface EnvlockConfig {
-  onePasswordEnvId?: string; // or set ENVLOCK_OP_ENV_ID env var
-  envFiles?: Partial<Record<Environment, string>>;
-  commands?: Record<string, string>;
-}
-
-interface EnvlockOptions {
-  onePasswordEnvId: string;
-  envFiles?: Partial<Record<Environment, string>>;
-}
-
-interface RunWithSecretsOptions {
-  envFile: string;
-  environment: Environment;
-  onePasswordEnvId: string;
-  command: string;
-  args: string[];
-}
-```
+Enables debug-level log output. Called automatically when `--debug` / `-d` is passed on the CLI.
 
 ## License
 
