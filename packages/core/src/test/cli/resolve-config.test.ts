@@ -50,6 +50,28 @@ describe("resolveConfig", () => {
     expect(config?.envFiles?.production).toBe(".env.prod");
   });
 
+  it("reads onePasswordEnvId from envlock.config.ts", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.ts"),
+      `export default { onePasswordEnvId: "from-ts" };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config?.onePasswordEnvId).toBe("from-ts");
+  });
+
+  it("prefers envlock.config.ts over envlock.config.js", async () => {
+    writeFileSync(
+      join(tmpDir, "envlock.config.ts"),
+      `export default { onePasswordEnvId: "from-ts" };`,
+    );
+    writeFileSync(
+      join(tmpDir, "envlock.config.js"),
+      `export default { onePasswordEnvId: "from-js" };`,
+    );
+    const config = await resolveConfig(tmpDir);
+    expect(config?.onePasswordEnvId).toBe("from-ts");
+  });
+
   it("prefers envlock.config.js over envlock.config.mjs", async () => {
     writeFileSync(
       join(tmpDir, "envlock.config.js"),
@@ -63,7 +85,7 @@ describe("resolveConfig", () => {
     expect(config?.onePasswordEnvId).toBe("from-js");
   });
 
-  it("falls back to envlock.config.mjs when .js absent", async () => {
+  it("falls back to envlock.config.mjs when .ts and .js absent", async () => {
     writeFileSync(
       join(tmpDir, "envlock.config.mjs"),
       `export default { onePasswordEnvId: "from-mjs" };`,

@@ -5,8 +5,10 @@ import type { EnvlockConfig } from "../types.js";
 import { log } from "../logger.js";
 
 const CONFIG_CANDIDATES = [
+  "envlock.config.ts",
   "envlock.config.js",
   "envlock.config.mjs",
+  "envlock.config.cjs",
 ];
 
 export async function resolveConfig(cwd: string): Promise<EnvlockConfig | null> {

@@ -15,8 +15,13 @@ describe("withEnvlock", () => {
     expect(result.reactStrictMode).toBe(true);
   });
 
-  it("does not attach __envlock to the returned config", () => {
+  it("attaches __envlock to the returned config when options provided", () => {
     const result = withEnvlock({}, { onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" });
+    expect((result as Record<string, unknown>).__envlock).toEqual({ onePasswordEnvId: "ca6uypwvab5mevel44gqdc2zae" });
+  });
+
+  it("does not attach __envlock when no options provided", () => {
+    const result = withEnvlock({});
     expect("__envlock" in result).toBe(false);
   });
 

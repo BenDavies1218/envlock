@@ -63,7 +63,7 @@ export function resolveCommand(
     if (config?.commands?.["run"]) {
       log.warn(
         '"run" is a reserved subcommand. The config command named "run" is ignored.\n' +
-        'Rename it in envlock.config.js to use it as a named command.',
+        'Rename it in envlock.config.ts to use it as a named command.',
       );
     }
     const runArgs = passthrough.slice(1);
@@ -79,7 +79,7 @@ export function resolveCommand(
   if (config?.commands && firstArg in config.commands) {
     const cmdString = config.commands[firstArg];
     if (!cmdString || cmdString.trim() === "") {
-      throw new Error(`[envlock] Command "${firstArg}" is empty in envlock.config.js.`);
+      throw new Error(`[envlock] Command "${firstArg}" is empty in envlock.config.ts.`);
     }
     const parts = splitCommand(cmdString);
     return { command: parts[0]!, args: parts.slice(1) };
@@ -104,7 +104,7 @@ export async function run(argv: string[], cwd: string = process.cwd()): Promise<
   const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config?.onePasswordEnvId;
   if (!onePasswordEnvId) {
     throw new Error(
-      "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
+      "[envlock] No onePasswordEnvId found. Set it in envlock.config.ts or via ENVLOCK_OP_ENV_ID env var.",
     );
   }
 

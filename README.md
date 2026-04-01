@@ -104,7 +104,7 @@ npm install envlock-core
 envlock node server.js
 envlock python app.py --port 4000
 
-# Named commands from envlock.config.js
+# Named commands from envlock.config.ts
 envlock dev
 envlock start --production
 
@@ -112,9 +112,9 @@ envlock start --production
 envlock run node migrate.js
 ```
 
-**Config file** (`envlock.config.js`):
+**Config file** (`envlock.config.ts`):
 
-```js
+```ts
 export default {
   onePasswordEnvId: "your-1password-env-id",
   commands: {

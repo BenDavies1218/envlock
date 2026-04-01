@@ -45,7 +45,7 @@ async function resolveAndValidateConfig(
   const onePasswordEnvId = process.env["ENVLOCK_OP_ENV_ID"] ?? config.onePasswordEnvId;
   if (!onePasswordEnvId) {
     throw new Error(
-      "[envlock] No onePasswordEnvId found. Set it in envlock.config.js or via ENVLOCK_OP_ENV_ID env var.",
+      "[envlock] No onePasswordEnvId found. Set it in envlock.config.ts or via ENVLOCK_OP_ENV_ID env var.",
     );
   }
   validateOnePasswordEnvId(onePasswordEnvId);

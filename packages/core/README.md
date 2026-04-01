@@ -22,9 +22,9 @@ npm install envlock-core
 
 ## Setup
 
-Create `envlock.config.js` in your project root:
+Create `envlock.config.ts` in your project root:
 
-```js
+```ts
 export default {
   onePasswordEnvId: "your-1password-env-id",
   commands: {
@@ -50,7 +50,7 @@ Update your `package.json` scripts:
 ## CLI Usage
 
 ```bash
-# Run a named command from envlock.config.js
+# Run a named command from envlock.config.ts
 envlock dev
 envlock start --production
 

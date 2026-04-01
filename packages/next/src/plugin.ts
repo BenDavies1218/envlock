@@ -9,5 +9,5 @@ export function withEnvlock(
   if (options?.onePasswordEnvId) {
     validateOnePasswordEnvId(options.onePasswordEnvId);
   }
-  return { ...nextConfig };
+  return options ? { ...nextConfig, __envlock: options } : { ...nextConfig };
 }
