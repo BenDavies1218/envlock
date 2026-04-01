@@ -29,7 +29,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm -r --workspace-concurrency=1 build
+        run: pnpm --filter './packages/**' -r build
 
       - name: Run tests
         run: pnpm -r test
